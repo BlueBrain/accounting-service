@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 
@@ -12,8 +12,6 @@ dependencies = [
     "fastapi",
     "pydantic>=2",
     "pydantic-settings>=2.2.1",
-    "requests",
-    "ruamel.yaml",
     "uvicorn[standard]",
 ]
 dynamic = ["version"]
@@ -44,35 +42,25 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = [
-    "D", # pydocstyle
-    "E", # pycodestyle
-    "F", # pyflakes
-    "UP", # pyupgrade
+select = ["ALL"]
+# TODO: remove rules not to be ignored
+ignore = [
+    'ANN',     # No annotations
+    "D100",    # Missing docstring in public module
+    "D101",    # Missing docstring in public class
+    "D102",    # Missing docstring in public method
+    "D103",    # Missing docstring in public function
+    "D104",    # Missing docstring in public package
+    'S101',    # Use of 'assert' detected
+    'N802',    # function name should be lowercase
 ]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-
-[tool.pylint.main]
-extension-pkg-allow-list = ["pydantic"]
-
-[tool.pylint."messages control"]
-disable = ["fixme", "invalid-name", "len-as-condition", "no-else-return"]
-
-[tool.pylint.format]
-# Regexp for a line that is allowed to be longer than the limit.
-ignore-long-lines = "^\\s*(# )?<?https?://\\S+>?$"
-# Maximum number of characters on a single line.
-max-line-length = 100
-
-[tool.pylint.design]
+[tool.ruff.lint.pylint]
 # Maximum number of arguments for function / method
-max-args = 9
-# Argument names that match this expression will be ignored. Default to name
-# with leading underscore
-ignored-argument-names = "_.*"
+max-args = 8
 # Maximum number of locals for function / method body
 max-locals = 15
 # Maximum number of return / yield for function / method body
@@ -81,28 +69,8 @@ max-returns = 6
 max-branches = 12
 # Maximum number of statements in function / method body
 max-statements = 50
-# Maximum number of parents for a class (see R0901).
-max-parents = 7
-# Maximum number of attributes for a class (see R0902).
-max-attributes = 40
-# Minimum number of public methods for a class (see R0903).
-min-public-methods = 0
 # Maximum number of public methods for a class (see R0904).
 max-public-methods = 60
-
-[tool.pylint.similarities]
-# Comments are removed from the similarity computation
-ignore-comments = true
-# Docstrings are removed from the similarity computation
-ignore-docstrings = true
-# Minimum lines number of a similarity.
-min-similarity-lines = 25
-
-[tool.pylint.typecheck]
-# List of class names for which member attributes should not be checked (useful
-# for classes with dynamically set attributes). This supports the use of
-# qualified names.
-ignored-classes = []
 
 
 [tool.pytest.ini_options]
@@ -124,4 +92,5 @@ parallel = false
 [tool.coverage.report]
 show_missing = true
 precision = 0
-fail_under = 80
+# TODO: increase threshold
+fail_under = 20

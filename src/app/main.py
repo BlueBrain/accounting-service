@@ -9,11 +9,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.status import HTTP_302_FOUND
 
+from app.api.v1.base import base_router as v1_router
 from app.config import configs
 from app.errors import ApiError
 from app.logger import L
 
-from app.api.v1.base import base_router as v1_router
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -39,9 +39,8 @@ app.add_middleware(
 
 
 @app.exception_handler(ApiError)
-async def client_error_handler(request: Request, exc: ApiError) -> JSONResponse:
+async def client_error_handler(request: Request, exc: ApiError) -> JSONResponse:  # noqa: ARG001
     """Handle application errors to be returned to the client."""
-    # pylint: disable=unused-argument
     msg = f"{exc.__class__.__name__}: {exc}"
     L.warning(msg)
     return JSONResponse(status_code=exc.status_code, content={"message": msg})

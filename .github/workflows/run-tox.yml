@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        python -m pip install --upgrade tox tox-uv
+        python -m pip install --upgrade tox
 
     - name: Run tox
       run: |

@@ -12,7 +12,6 @@ class Configs(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        # frozen=True,
     )
 
     ENV: str = "development"
