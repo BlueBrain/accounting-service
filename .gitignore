@@ -1,0 +1,12 @@
+*.pyc
+*.swp
+coverage.xml
+*.egg-info
+.coverage
+.tox
+build
+dist
+venv
+tmp
+.eggs
+.idea
