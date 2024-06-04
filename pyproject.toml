@@ -42,17 +42,14 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
+preview = true
 select = ["ALL"]
-# TODO: remove rules not to be ignored
 ignore = [
-    'ANN',     # No annotations
-    "D100",    # Missing docstring in public module
-    "D101",    # Missing docstring in public class
-    "D102",    # Missing docstring in public method
-    "D103",    # Missing docstring in public function
-    "D104",    # Missing docstring in public package
-    'S101',    # Use of 'assert' detected
+    "ANN002",  # Missing type annotation for `*args`
+    "ANN003",  # Missing type annotation for `**kwargs`
+    "CPY001",  # Missing copyright notice at top of file
     'N802',    # function name should be lowercase
+    "RUF029",  # Function is declared `async`, but doesn't `await` or use `async` features.
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -92,5 +89,4 @@ parallel = false
 [tool.coverage.report]
 show_missing = true
 precision = 0
-# TODO: increase threshold
-fail_under = 20
+fail_under = 100

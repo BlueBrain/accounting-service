@@ -1,13 +1,14 @@
+"""Configuration."""
+
 from functools import cached_property
 
-from dotenv import load_dotenv
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
+class Settings(BaseSettings):
+    """Settings class."""
 
-class Configs(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -35,6 +36,7 @@ class Configs(BaseSettings):
 
     @cached_property
     def DB_URI(self) -> PostgresDsn:
+        """Return the db uri built from the parameters."""
         return PostgresDsn.build(
             scheme=self.DB_ENGINE,
             username=self.DB_USER,
@@ -45,4 +47,4 @@ class Configs(BaseSettings):
         )
 
 
-configs = Configs()
+settings = Settings()

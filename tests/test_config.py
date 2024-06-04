@@ -2,7 +2,7 @@ from app import config as test_module
 
 
 def test_configs():
-    configs = test_module.configs
+    configs = test_module.settings
 
     assert configs.APP_NAME == "accounting-service"
     assert (

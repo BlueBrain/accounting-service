@@ -1,31 +1,31 @@
 """Logger configuration."""
 
+import logging
 import logging.config
 from pathlib import Path
 
 import yaml
 
-from app.config import configs
+from app.config import settings
 
 
 def _read_config_file() -> dict | None:
-    path = Path(configs.LOGGING_CONFIG)
+    path = Path(__file__).parents[1] / settings.LOGGING_CONFIG
     try:
         return yaml.safe_load(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        L.warning("Logging configuration file not found: %s", path)
+        logging.warning("Logging configuration file not found: %s", path)
         return None
 
 
-def _configure(logger: logging.Logger | None) -> logging.Logger:
+def _configure(name: str | None = None) -> logging.Logger:
     """Configure logging."""
-    assert logger is not None
+    logger = logging.getLogger(name or settings.APP_NAME)
     if logging_config_dict := _read_config_file():
         logging.config.dictConfig(logging_config_dict)
-    if configs.LOGGING_LEVEL:
-        logger.setLevel(configs.LOGGING_LEVEL)
+    if settings.LOGGING_LEVEL is not None:
+        logger.setLevel(settings.LOGGING_LEVEL)
     return logger
 
 
-L = logging.getLogger(__name__).parent
-L = _configure(L)
+L = _configure()

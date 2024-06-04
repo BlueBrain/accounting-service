@@ -1,22 +1,23 @@
 """API entry points."""
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.status import HTTP_302_FOUND
 
 from app.api.v1.base import base_router as v1_router
-from app.config import configs
+from app.config import settings
 from app.errors import ApiError
 from app.logger import L
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Execute actions on server startup and shutdown."""
     L.info("PID: %s", os.getpid())
     L.info("CPU count: %s", os.cpu_count())
@@ -25,13 +26,13 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title=configs.APP_NAME,
-    debug=configs.APP_DEBUG,
+    title=settings.APP_NAME,
+    debug=settings.APP_DEBUG,
     lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=configs.CORS_ORIGINS,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +48,7 @@ async def client_error_handler(request: Request, exc: ApiError) -> JSONResponse:
 
 
 @app.get("/")
-async def root():
+async def root() -> Response:
     """Root endpoint."""
     return RedirectResponse(url="/docs", status_code=HTTP_302_FOUND)
 
@@ -64,10 +65,17 @@ async def health() -> dict:
 async def version() -> dict:
     """Version endpoint."""
     return {
-        "app_name": configs.APP_NAME,
-        "app_version": configs.APP_VERSION,
-        "commit_sha": configs.COMMIT_SHA,
+        "app_name": settings.APP_NAME,
+        "app_version": settings.APP_VERSION,
+        "commit_sha": settings.COMMIT_SHA,
     }
 
 
-app.include_router(v1_router, prefix=configs.API_V1)
+@app.get("/error", include_in_schema=False)
+async def error() -> None:
+    """Error endpoint to test generic error responses."""
+    msg = "Generic error returned for testing purposes"
+    raise ApiError(msg)
+
+
+app.include_router(v1_router, prefix=settings.API_V1)
