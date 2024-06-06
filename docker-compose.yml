@@ -1,8 +1,8 @@
-# docker-compose.yml for local deployment
+# for local deployment
 
 services:
   app:
-    container_name: accounting-service
+    container_name: accounting-service-app
     build:
       dockerfile: Dockerfile
     ports:
@@ -22,3 +22,28 @@ services:
         path: requirements.txt
       - action: rebuild
         path: docker-entrypoint.sh
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: accounting-service-db
+    environment:
+      POSTGRES_USER: accounting_service
+      POSTGRES_PASSWORD: accounting_service
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accounting_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+      start_interval: 1s
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: {}

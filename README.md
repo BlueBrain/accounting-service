@@ -8,19 +8,27 @@ This service is composed by:
 
 ## Local build and deployment
 
-To build and start the Docker image locally, you can execute:
+Valid `make` targets:
+
+```
+help                    Show this help
+build-image             Build the local docker images
+run-image               Run the local docker images
+compile-deps            Create or update requirements.txt, without upgrading the version of the dependencies
+upgrade-deps            Create or update requirements.txt, using the latest version of the dependencies
+check-deps              Check that the dependencies in the existing requirements.txt are valid
+py                      Run tests and coverage
+lint                    Check linting
+format                  Format the code
+version                 Print the version
+```
+
+To build and start the Docker images locally, you can execute:
 
 ```bash
-tox -e build-image,run-image
+make run-image
 ```
 
-Possible tox environments (run `tox list` for the full list):
-
-```
-# build-image          -> Build a local docker image
-# run-image            -> Run a local docker image previously built
-# logs-image           -> Tail the logs of a local docker container
-```
 
 ## Remote deployment
 
@@ -35,9 +43,6 @@ The format of the tag should be `YYYY.MM.DD`, where:
 -   `MM` is the short month, not zero-padded (1, 2 ... 11, 12)
 -   `DD` is any incremental number, not zero-padded (it doesn't need to be the day number)
 
-The new Docker images are automatically deployed after a few minutes.
-
-See also the configuration files at <https://bbpgitlab.epfl.ch/project/sbo/k8s>.
 
 ## Documentation
 

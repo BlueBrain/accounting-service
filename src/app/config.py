@@ -1,7 +1,5 @@
 """Configuration."""
 
-from functools import cached_property
-
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -27,15 +25,15 @@ class Settings(BaseSettings):
     LOGGING_CONFIG: str = "app/data/logging.yaml"
     LOGGING_LEVEL: str | None = None
 
-    DB_ENGINE: str = "postgresql"
-    DB_USER: str = APP_NAME
-    DB_PASS: str = APP_NAME
+    DB_ENGINE: str = "postgresql+asyncpg"
+    DB_USER: str = "accounting_service"
+    DB_PASS: str = "accounting_service"
     DB_HOST: str = "localhost"
-    DB_PORT: int = 3306
-    DB_NAME: str = APP_NAME
+    DB_PORT: int = 5432
+    DB_NAME: str = "accounting_service"
 
-    @cached_property
-    def DB_URI(self) -> PostgresDsn:
+    @property
+    def DB_URI(self) -> str:
         """Return the db uri built from the parameters."""
         return PostgresDsn.build(
             scheme=self.DB_ENGINE,
@@ -44,7 +42,7 @@ class Settings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_NAME,
-        )
+        ).unicode_string()
 
 
 settings = Settings()

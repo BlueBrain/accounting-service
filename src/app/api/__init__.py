@@ -1,1 +1,1 @@
-"""Endpoints."""
+"""Api endpoints."""
