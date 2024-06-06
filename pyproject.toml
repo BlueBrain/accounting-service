@@ -17,12 +17,6 @@ dependencies = [
 dynamic = ["version"]
 
 
-[project.optional-dependencies]
-cli = [
-    "click",
-]
-
-
 [tool.setuptools_scm]
 
 
@@ -74,6 +68,9 @@ max-public-methods = 60
 addopts = [
     "--import-mode=importlib",
 ]
+pythonpath = [
+    "src",
+]
 
 
 [tool.coverage.paths]
@@ -85,6 +82,9 @@ source = [
 [tool.coverage.run]
 branch = true
 parallel = false
+source_pkgs = [
+    "app",
+]
 
 [tool.coverage.report]
 show_missing = true
