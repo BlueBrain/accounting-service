@@ -16,8 +16,8 @@ services:
     develop:
       watch:
       - action: sync
-        path: ./src/app
-        target: /src/app
+        path: ./app
+        target: /code/app
       - action: rebuild
         path: requirements.txt
       - action: rebuild

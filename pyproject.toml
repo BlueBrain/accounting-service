@@ -25,6 +25,10 @@ license = {text = "Apache-2.0"}
 dynamic = ["version"]
 
 
+[tool.setuptools]
+packages = []
+
+
 [tool.setuptools_scm]
 
 
@@ -87,16 +91,7 @@ max-public-methods = 60
 addopts = [
     "--import-mode=importlib",
 ]
-pythonpath = [
-    "src",
-]
 
-
-[tool.coverage.paths]
-source = [
-    "src",
-    "*/site-packages",
-]
 
 [tool.coverage.run]
 branch = true

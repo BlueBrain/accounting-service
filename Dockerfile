@@ -18,7 +18,7 @@ RUN useradd -ms /bin/sh -u 1001 app
 ENV PATH="${PATH}:/home/app/.local/bin"
 USER app
 
-WORKDIR /src
+WORKDIR /code
 COPY --chown=app:app requirements.txt .
 COPY --chown=app:app docker-entrypoint.sh .
 
@@ -26,7 +26,7 @@ RUN \
     pip install --user --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --user --no-cache-dir --upgrade -r requirements.txt
 
-COPY --chown=app:app ./src/app app
+COPY --chown=app:app . .
 
 ARG APP_NAME
 ARG APP_VERSION

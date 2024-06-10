@@ -19,15 +19,15 @@ run-image: build-image  ## Run the local docker images
 	docker compose --progress=tty up --watch --remove-orphans
 
 compile-deps:  ## Create or update requirements.txt, without upgrading the version of the dependencies
-	tox exec -e pip-tools -- python -m piptools compile
+	tox exec -e pip-tools -- python -m piptools compile -v
 
 upgrade-deps:  ## Create or update requirements.txt, using the latest version of the dependencies
-	tox exec -e pip-tools -- python -m piptools compile --upgrade
+	tox exec -e pip-tools -- python -m piptools compile -v --upgrade
 
 check-deps:  ## Check that the dependencies in the existing requirements.txt are valid
 	diff --ignore-blank-lines \
 	<(grep -vE "^ *\#" requirements.txt) \
-	<(tox exec -qq -e pip-tools -- python -m piptools compile -q -o - | grep -vE "^ *\#")
+	<(tox exec -qq -e pip-tools -- python -m piptools compile --dry-run 2>&1 | grep -v Dry-run | grep -vE "^ *\#")
 
 clean:  ## Delete tox environments and temporary files
 	rm -rf .tox
