@@ -12,21 +12,23 @@ Valid `make` targets:
 
 ```
 help                    Show this help
-build-image             Build the local docker images
-run-image               Run the local docker images
-compile-deps            Create or update requirements.txt, without upgrading the version of the dependencies
-upgrade-deps            Create or update requirements.txt, using the latest version of the dependencies
-check-deps              Check that the dependencies in the existing requirements.txt are valid
-py                      Run tests and coverage
-lint                    Check linting
-format                  Format the code
-version                 Print the version
+install                 Install dependencies into .venv
+compile-deps            Create or update the lock file, without upgrading the version of the dependencies
+upgrade-deps            Create or update the lock file, using the latest version of the dependencies
+check-deps              Check that the dependencies in the existing lock file are valid
+lint                    Run linters
+build                   Build the local docker images
+run                     Run the application in docker
+kill                    Take down the application
+tests                   Run tests in the app container
+migration               Create the alembic migration
+sh                      Run a shell in the app container
 ```
 
 To build and start the Docker images locally, you can execute:
 
 ```bash
-make run-image
+make run
 ```
 
 

@@ -7,6 +7,9 @@ HELP_TEMPLATE := \033[36m%-23s\033[0m %s
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "$(HELP_TEMPLATE)\n", $$1, $$2}'
 
+install:  ## Install dependencies into .venv
+	pdm install --no-self
+
 compile-deps:  ## Create or update the lock file, without upgrading the version of the dependencies
 	pdm lock
 
@@ -15,9 +18,6 @@ upgrade-deps:  ## Create or update the lock file, using the latest version of th
 
 check-deps:  ## Check that the dependencies in the existing lock file are valid
 	pdm lock --check
-
-install:  ## Install dependencies into .venv
-	pdm install --no-self
 
 format:  # Run formatters
 	pdm run ruff format
