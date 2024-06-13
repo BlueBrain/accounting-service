@@ -9,7 +9,7 @@ ENV \
     PDM_NO_EDITABLE=true \
     PDM_NO_SELF=true
 WORKDIR /code
-RUN pip install --no-cache-dir --upgrade pdm==2.15.4
+RUN pip install --no-cache-dir pdm
 COPY pyproject.toml pdm.lock ./
 RUN pdm venv create && pdm install --check --${ENVIRONMENT}
 
