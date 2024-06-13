@@ -13,12 +13,15 @@ class Settings(BaseSettings):
         case_sensitive=True,
     )
 
-    ENV: str = "development"
+    ENVIRONMENT: str = "dev"
     API: str = "/api"
     API_V1: str = "/api/v1"
+    APP_HOST: str = "0.0.0.0"
+    APP_PORT: int = 8900
     APP_NAME: str = "accounting-service"
     APP_VERSION: str | None = None
-    APP_DEBUG: bool = True
+    APP_DEBUG: bool = False
+    APP_RELOAD: bool = False
     COMMIT_SHA: str | None = None
 
     CORS_ORIGINS: list[str] = ["*"]
@@ -28,7 +31,7 @@ class Settings(BaseSettings):
     DB_ENGINE: str = "postgresql+asyncpg"
     DB_USER: str = "accounting_service"
     DB_PASS: str = "accounting_service"
-    DB_HOST: str = "localhost"
+    DB_HOST: str = "db"
     DB_PORT: int = 5432
     DB_NAME: str = "accounting_service"
 

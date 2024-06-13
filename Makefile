@@ -1,37 +1,55 @@
 SHELL := /bin/bash
-SERVICE_NAME := accounting-service
+SERVICE := app
 HELP_TEMPLATE := \033[36m%-23s\033[0m %s
+
+.PHONY: tests
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "$(HELP_TEMPLATE)\n", $$1, $$2}'
-	@tox list|grep -v __internal__|grep -E '^[a-zA-Z_-]+ .*?-> .*$$'|awk 'BEGIN {FS = " .*?-> "}; {printf "$(HELP_TEMPLATE)\n", $$1, $$2}'
 
-build-image:  ## Build the local docker images
-	VERSION=$(shell tox run -qq -e version) && \
+compile-deps:  ## Create or update the lock file, without upgrading the version of the dependencies
+	pdm lock
+
+upgrade-deps:  ## Create or update the lock file, using the latest version of the dependencies
+	pdm update
+
+check-deps:  ## Check that the dependencies in the existing lock file are valid
+	pdm lock --check
+
+install:  ## Install dependencies into .venv
+	pdm install --no-self
+
+format:  # Run formatters
+	pdm run ruff format
+	pdm run ruff check --fix
+
+lint:  ## Run linters
+	pdm run ruff format --check
+	pdm run ruff check
+	pdm run mypy app
+
+build:  ## Build the local docker images
+	export \
+	APP_VERSION=$(shell pdm show --version) \
 	COMMIT_SHA=$(shell git rev-parse HEAD) && \
-	docker compose --progress=plain build \
-		--build-arg APP_NAME=$(SERVICE_NAME):local \
-		--build-arg APP_VERSION=$$VERSION \
-		--build-arg COMMIT_SHA=$$COMMIT_SHA \
-		--build-arg INSTALL_DEBUG_TOOLS=true
+	docker compose --progress=plain build
 
-run-image: build-image  ## Run the local docker images
+run: build  ## Run the application in docker
 	docker compose --progress=tty up --watch --remove-orphans
 
-compile-deps:  ## Create or update requirements.txt, without upgrading the version of the dependencies
-	tox exec -e pip-tools -- python -m piptools compile -v
+kill:  ## Take down the application
+	docker compose down --remove-orphans
 
-upgrade-deps:  ## Create or update requirements.txt, using the latest version of the dependencies
-	tox exec -e pip-tools -- python -m piptools compile -v --upgrade
+tests: build  ## Run tests in the app container
+	docker compose run $(SERVICE) sh -c "\
+		alembic downgrade base && alembic upgrade head && \
+	    python -m pytest -vv --cov=app tests && \
+		python -m coverage xml && \
+		python -m coverage html"
 
-check-deps:  ## Check that the dependencies in the existing requirements.txt are valid
-	diff --ignore-blank-lines \
-	<(grep -vE "^ *\#" requirements.txt) \
-	<(tox exec -qq -e pip-tools -- python -m piptools compile --dry-run 2>&1 | grep -v Dry-run | grep -vE "^ *\#")
+migration: build  ## Create the alembic migration
+	docker compose run $(SERVICE) sh -c "\
+		alembic upgrade head && alembic revision --autogenerate"
 
-clean:  ## Delete tox environments and temporary files
-	rm -rf .tox
-	find . -type d -name '*.egg-info' -print0 | xargs -0 rm -rf
-
-.DEFAULT:  # Run tox by default for any unknown target
-	tox run -e $@ $(OPTIONS)
+sh: build  ## Run a shell in the app container
+	docker compose run --service-ports $(SERVICE) bash

@@ -5,23 +5,28 @@ services:
     container_name: accounting-service-app
     build:
       dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=dev
+        - INSTALL_DEBUG_TOOLS=true
+        - APP_NAME=accounting-service
+        - APP_VERSION=${APP_VERSION:-UNKNOWN}
+        - COMMIT_SHA=${COMMIT_SHA:-UNKNOWN}
     ports:
     - "127.0.0.1:8900:8900"
     cap_add:
     - SYS_PTRACE
     environment:
+    - APP_PORT=8900
     - APP_DEBUG=true
+    - APP_RELOAD=true
     - LOGGING_LEVEL=DEBUG
-    - UVICORN_RELOAD=True
     develop:
       watch:
       - action: sync
         path: ./app
         target: /code/app
       - action: rebuild
-        path: requirements.txt
-      - action: rebuild
-        path: docker-entrypoint.sh
+        path: pdm.lock
     depends_on:
       db:
         condition: service_healthy

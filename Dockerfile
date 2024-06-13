@@ -1,38 +1,37 @@
-FROM python:3.12
-SHELL ["/bin/bash", "-e", "-o", "pipefail", "-c"]
+ARG PYTHON_BASE=3.12-slim
+ARG ENVIRONMENT="prod"
 
-ARG INSTALL_DEBUG_TOOLS
-RUN \
-    if [[ "${INSTALL_DEBUG_TOOLS}" == "true" ]]; then \
-        SYSTEM_DEBUG_TOOLS="vim less curl jq htop strace net-tools iproute2" && \
-        PYTHON_DEBUG_TOOLS="py-spy memory-profiler" && \
-        echo "Installing tools for profiling and inspection..." && \
-        apt-get update && \
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${SYSTEM_DEBUG_TOOLS} && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* && \
-        pip install --no-cache-dir --upgrade ${PYTHON_DEBUG_TOOLS} ; \
-    fi
-
-RUN useradd -ms /bin/sh -u 1001 app
-ENV PATH="${PATH}:/home/app/.local/bin"
-USER app
-
+# build stage
+FROM python:$PYTHON_BASE AS builder
+ARG ENVIRONMENT
+ENV \
+    PDM_CHECK_UPDATE=false \
+    PDM_NO_EDITABLE=true \
+    PDM_NO_SELF=true
 WORKDIR /code
-COPY --chown=app:app requirements.txt .
-COPY --chown=app:app docker-entrypoint.sh .
+RUN pip install --no-cache-dir --upgrade pdm==2.15.4
+COPY pyproject.toml pdm.lock ./
+RUN pdm venv create && pdm install --check --${ENVIRONMENT}
 
-RUN \
-    pip install --user --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --user --no-cache-dir --upgrade -r requirements.txt
+# run stage
+FROM python:$PYTHON_BASE
+RUN useradd -ms /bin/sh -u 1001 app
+USER app
+WORKDIR /code
+COPY --from=builder /code/.venv/ .venv
+ENV PATH="/code/.venv/bin:$PATH"
+COPY --chown=app:app alembic.ini pyproject.toml ./
+COPY --chown=app:app alembic/ alembic
+COPY --chown=app:app app/ app
+COPY --chown=app:app tests/ tests
 
-COPY --chown=app:app . .
-
+ARG ENVIRONMENT
 ARG APP_NAME
 ARG APP_VERSION
 ARG COMMIT_SHA
+ENV ENVIRONMENT=${ENVIRONMENT}
 ENV APP_NAME=${APP_NAME}
 ENV APP_VERSION=${APP_VERSION}
 ENV COMMIT_SHA=${COMMIT_SHA}
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["python", "-m", "app"]

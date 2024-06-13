@@ -9,6 +9,7 @@ coverage.xml
 .venv
 .mypy_cache
 .ruff_cache
+.pdm-python
 **/__pycache__
 **/*.pyc
 **/*.swp

@@ -1,7 +1,6 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools-scm>=8"]
-build-backend = "setuptools.build_meta"
-
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
 name = "accounting-service"
@@ -24,13 +23,22 @@ readme = "README.md"
 license = {text = "Apache-2.0"}
 dynamic = ["version"]
 
+[tool.pdm]
+distribution = true
 
-[tool.setuptools]
-packages = []
+[tool.pdm.version]
+source = "scm"
 
-
-[tool.setuptools_scm]
-
+[tool.pdm.dev-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+    "pytest-cov",
+    "coverage[toml]",
+    "mypy",
+    "ruff",
+    "types-PyYAML",
+]
 
 [tool.ruff]
 line-length = 100
@@ -47,6 +55,7 @@ ignore = [
     "ISC001",  # single line implicit string concatenation (disabling suggested by ruff formatter)
     "N802",    # function name should be lowercase
     "RUF029",  # Function is declared `async`, but doesn't `await` or use `async` features.
+    "S104",    # Possible binding to all interfaces
 ]
 
 [tool.ruff.lint.isort]
@@ -92,7 +101,6 @@ addopts = [
     "--import-mode=importlib",
 ]
 
-
 [tool.coverage.run]
 branch = true
 parallel = false
@@ -104,16 +112,11 @@ source_pkgs = [
 show_missing = true
 precision = 0
 fail_under = 100
-
+omit = [
+    "__main__.py",
+]
 
 [tool.mypy]
 show_error_codes = true
 ignore_missing_imports = true
 allow_redefinition = true
-
-
-[tool.pip-tools.compile]
-allow-unsafe = true
-strip-extras = true
-no-emit-index-url =true
-no-header = true

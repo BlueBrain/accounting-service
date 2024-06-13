@@ -12,3 +12,4 @@ tmp
 .eggs
 .idea
 htmlcov
+.pdm-python

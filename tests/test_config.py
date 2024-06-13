@@ -7,5 +7,5 @@ def test_configs():
     assert configs.APP_NAME == "accounting-service"
     assert (
         configs.DB_URI == "postgresql+asyncpg://"
-        "accounting_service:accounting_service@localhost:5432/accounting_service"
+        "accounting_service:accounting_service@db:5432/accounting_service"
     )

@@ -16,11 +16,11 @@ def test_version(client):
     response = client.get("/version")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "app_name": "accounting-service",
-        "app_version": None,
-        "commit_sha": None,
-    }
+    response_json = response.json()
+    assert set(response_json) == {"app_name", "app_version", "commit_sha"}
+    assert response_json["app_name"] == "accounting-service"
+    assert response_json["app_version"] is not None
+    assert response_json["commit_sha"] is not None
 
 
 def test_error(client):
