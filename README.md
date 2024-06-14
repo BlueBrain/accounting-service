@@ -4,7 +4,7 @@
 
 This service is composed by:
 
--   `accounting-service`: main service, listening on port 8900.
+-   `accounting-service`: main service.
 
 ## Local build and deployment
 
@@ -17,7 +17,7 @@ compile-deps            Create or update the lock file, without upgrading the ve
 upgrade-deps            Create or update the lock file, using the latest version of the dependencies
 check-deps              Check that the dependencies in the existing lock file are valid
 lint                    Run linters
-build                   Build the local docker images
+build                   Build the docker images
 run                     Run the application in docker
 kill                    Take down the application
 tests                   Run tests in the app container
@@ -48,4 +48,4 @@ The format of the tag should be `YYYY.MM.DD`, where:
 
 ## Documentation
 
-The API documentation is available locally at <https://127.0.0.1:8900/docs> after the local deployment.
+The API documentation is available locally at <https://127.0.0.1:8100/docs> after the local deployment.

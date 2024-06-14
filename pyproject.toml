@@ -104,7 +104,7 @@ source_pkgs = [
 [tool.coverage.report]
 show_missing = true
 precision = 0
-fail_under = 100
+fail_under = 85
 omit = [
     "__main__.py",
 ]

@@ -3,10 +3,7 @@
 from fastapi import APIRouter
 from pydantic import UUID4
 
-router = APIRouter(
-    prefix="/virtual-lab",
-    tags=["virtual-lab"],
-)
+router = APIRouter()
 
 
 @router.get("/{virtual_lab_id}")

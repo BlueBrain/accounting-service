@@ -1,10 +1,7 @@
 SHELL := /bin/bash
-SERVICE := app
-
-.PHONY: tests
 
 help:  ## Show this help
-	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
 install:  ## Install dependencies into .venv
 	pdm install --no-self
@@ -27,10 +24,11 @@ lint:  ## Run linters
 	pdm run ruff check
 	pdm run mypy app
 
-build:  ## Build the local docker images
-	export \
-	APP_VERSION=$(shell git describe --abbrev --dirty --always --tags) \
-	COMMIT_SHA=$(shell git rev-parse HEAD) && \
+build: export ENVIRONMENT ?= dev
+build: export APP_NAME := accounting-service
+build: export APP_VERSION := $(shell git describe --abbrev --dirty --always --tags)
+build: export COMMIT_SHA := $(shell git rev-parse HEAD)
+build:  ## Build the docker images
 	docker compose --progress=plain build
 
 run: build  ## Run the application in docker
@@ -39,16 +37,17 @@ run: build  ## Run the application in docker
 kill:  ## Take down the application
 	docker compose down --remove-orphans
 
+.PHONY: tests
 tests: build  ## Run tests in the app container
-	docker compose run $(SERVICE) sh -c "\
+	docker compose run app sh -c "\
 		alembic downgrade base && alembic upgrade head && \
 	    python -m pytest -vv --cov=app tests && \
 		python -m coverage xml && \
 		python -m coverage html"
 
 migration: build  ## Create the alembic migration
-	docker compose run $(SERVICE) sh -c "\
+	docker compose run app sh -c "\
 		alembic upgrade head && alembic revision --autogenerate"
 
 sh: build  ## Run a shell in the app container
-	docker compose run --service-ports $(SERVICE) bash
+	docker compose run --rm --service-ports app bash

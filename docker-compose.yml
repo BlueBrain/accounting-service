@@ -6,19 +6,18 @@ services:
     build:
       dockerfile: Dockerfile
       args:
-        - ENVIRONMENT=dev
-        - APP_NAME=accounting-service
-        - APP_VERSION=${APP_VERSION:-UNKNOWN}
-        - COMMIT_SHA=${COMMIT_SHA:-UNKNOWN}
+        - ENVIRONMENT
+        - APP_NAME
+        - APP_VERSION
+        - COMMIT_SHA
     ports:
-    - "127.0.0.1:8900:8900"
+    - "127.0.0.1:8100:8000"
     cap_add:
     - SYS_PTRACE
     environment:
-    - APP_PORT=8900
     - APP_DEBUG=true
-    - APP_RELOAD=true
     - LOGGING_LEVEL=DEBUG
+    - UVICORN_RELOAD=true
     develop:
       watch:
       - action: sync
@@ -30,7 +29,8 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./alembic/versions:/code/alembic/versions  # to add migration files
+      - ./tests:/code/tests  # to run tests
+      - ./alembic/versions:/code/alembic/versions  # to write migration files
 
   db:
     image: postgres:16-alpine
