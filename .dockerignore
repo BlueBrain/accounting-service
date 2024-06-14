@@ -1,15 +1,22 @@
-build
-dist
-htmlcov
-venv
-coverage.xml
-.coverage
-.tox
-.idea
-.venv
-.mypy_cache
-.ruff_cache
-.pdm-python
+# Ignore everything
+*
+
+# Allow files and directories
+!/alembic
+!/app
+!/tests
+
+!/alembic.ini
+!/docker-cmd.sh
+!/pdm.lock
+!/pyproject.toml
+
+# Ignore unnecessary files inside allowed directories
+# This should go after the allowed directories
+**/*~
+**/*.log
+**/.DS_Store
+**/Thumbs.db
 **/__pycache__
 **/*.pyc
 **/*.swp

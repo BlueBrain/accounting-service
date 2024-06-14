@@ -6,7 +6,7 @@ from app.config import settings
 
 if __name__ == "__main__":
     uvicorn.run(
-        "app.main:app",
+        "app.application:app",
         host=settings.APP_HOST,
         port=settings.APP_PORT,
         proxy_headers=True,

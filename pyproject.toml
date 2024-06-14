@@ -1,9 +1,6 @@
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
 [project]
 name = "accounting-service"
+version = "0.0.0"
 description = "Accounting Service"
 authors = [
     {name = "Blue Brain Project, EPFL"},
@@ -21,13 +18,9 @@ dependencies = [
 requires-python = "==3.12.*"
 readme = "README.md"
 license = {text = "Apache-2.0"}
-dynamic = ["version"]
 
 [tool.pdm]
-distribution = true
-
-[tool.pdm.version]
-source = "scm"
+distribution = false
 
 [tool.pdm.dev-dependencies]
 dev = [

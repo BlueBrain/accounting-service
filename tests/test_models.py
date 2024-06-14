@@ -1,4 +1,4 @@
-from app import models as test_module
+from app.db import models as test_module
 
 
 def test_models():

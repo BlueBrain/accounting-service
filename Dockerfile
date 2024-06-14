@@ -11,19 +11,16 @@ ENV \
 WORKDIR /code
 RUN pip install --no-cache-dir pdm
 COPY pyproject.toml pdm.lock ./
-RUN pdm venv create && pdm install --check --${ENVIRONMENT}
+RUN pdm venv create --with-pip && pdm install --check --${ENVIRONMENT}
 
 # run stage
 FROM python:$PYTHON_BASE
 RUN useradd -ms /bin/sh -u 1001 app
 USER app
 WORKDIR /code
-COPY --from=builder /code/.venv/ .venv
 ENV PATH="/code/.venv/bin:$PATH"
-COPY --chown=app:app alembic.ini pyproject.toml ./
-COPY --chown=app:app alembic/ alembic
-COPY --chown=app:app app/ app
-COPY --chown=app:app tests/ tests
+COPY --chown=app:app --from=builder /code/.venv/ .venv
+COPY --chown=app:app . .
 
 ARG ENVIRONMENT
 ARG APP_NAME
@@ -34,4 +31,4 @@ ENV APP_NAME=${APP_NAME}
 ENV APP_VERSION=${APP_VERSION}
 ENV COMMIT_SHA=${COMMIT_SHA}
 
-CMD ["python", "-m", "app"]
+CMD ["./docker-cmd.sh"]

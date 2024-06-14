@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
       args:
         - ENVIRONMENT=dev
-        - INSTALL_DEBUG_TOOLS=true
         - APP_NAME=accounting-service
         - APP_VERSION=${APP_VERSION:-UNKNOWN}
         - COMMIT_SHA=${COMMIT_SHA:-UNKNOWN}
@@ -30,6 +29,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./alembic/versions:/code/alembic/versions  # to add migration files
 
   db:
     image: postgres:16-alpine

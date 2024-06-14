@@ -40,8 +40,8 @@ app.add_middleware(
 
 
 @app.exception_handler(ApiError)
-async def client_error_handler(request: Request, exc: ApiError) -> JSONResponse:  # noqa: ARG001
-    """Handle application errors to be returned to the client."""
+async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:  # noqa: ARG001
+    """Handle API errors to be returned to the client."""
     msg = f"{exc.__class__.__name__}: {exc}"
     L.warning(msg)
     return JSONResponse(status_code=exc.status_code, content={"message": msg})

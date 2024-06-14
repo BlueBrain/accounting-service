@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     DB_PORT: int = 5432
     DB_NAME: str = "accounting_service"
 
+    DB_ECHO: bool = False
+    DB_ECHO_POOL: bool = False
+    DB_POOL_SIZE: int = 5
+    DB_POOL_PRE_PING: bool = True
+    DB_MAX_OVERFLOW: int = 0
+
     @property
     def DB_URI(self) -> str:
         """Return the db uri built from the parameters."""
