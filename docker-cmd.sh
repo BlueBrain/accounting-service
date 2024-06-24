@@ -1,9 +1,8 @@
 #!/bin/bash
 set -ex -o pipefail
 
+# ensure that the database is up to date
 alembic upgrade head
-uvicorn \
-  --host=0.0.0.0 \
-  --proxy-headers \
-  --log-config=app/data/logging.yaml \
-  app.application:app
+
+# use exec to replace the shell and ensure that SIGINT is sent to the app
+exec python -m app

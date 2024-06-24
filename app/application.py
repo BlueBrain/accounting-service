@@ -1,5 +1,6 @@
 """API entry points."""
 
+import asyncio
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -11,34 +12,29 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from app.config import settings
-from app.db.session import database_session_factory
 from app.endpoints import router
 from app.errors import ApiError
-from app.logger import L
+from app.logger import get_logger
+
+L = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[dict[str, Any]]:
     """Execute actions on server startup and shutdown."""
     L.info(
-        "Starting application [ENVIRONMENT=%s, pid=%s, cpu_count=%s]",
-        settings.ENVIRONMENT,
+        "Starting application [PID=%s, CPU_COUNT=%s, ENVIRONMENT=%s]",
         os.getpid(),
         os.cpu_count(),
-    )
-    await database_session_factory.initialize(
-        url=settings.DB_URI,
-        echo=settings.DB_ECHO,
-        echo_pool=settings.DB_ECHO_POOL,
-        pool_size=settings.DB_POOL_SIZE,
-        pool_pre_ping=settings.DB_POOL_PRE_PING,
-        max_overflow=settings.DB_MAX_OVERFLOW,
+        settings.ENVIRONMENT,
     )
     try:
         yield {}
+    except asyncio.CancelledError as err:
+        # this can happen if the task is cancelled without sending SIGINT
+        L.info("Ignored %r in lifespan", err)
     finally:
         L.info("Stopping application")
-        await database_session_factory.close()
 
 
 async def api_error_handler(_: Request, exc: ApiError) -> JSONResponse:

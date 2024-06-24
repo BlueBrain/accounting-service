@@ -48,4 +48,4 @@ The format of the tag should be `YYYY.MM.DD`, where:
 
 ## Documentation
 
-The API documentation is available locally at <https://127.0.0.1:8100/docs> after the local deployment.
+The API documentation is available locally at <http://127.0.0.1:8100/docs> after the local deployment.

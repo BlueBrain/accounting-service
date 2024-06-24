@@ -7,8 +7,10 @@ authors = [
     {name = "Gianluca Ficarelli", email = "gianluca.ficarelli@epfl.ch"},
 ]
 dependencies = [
+    "aiobotocore",
     "alembic",
     "asyncpg",
+    "botocore",
     "fastapi",
     "pydantic>=2",
     "pydantic-settings>=2.2.1",

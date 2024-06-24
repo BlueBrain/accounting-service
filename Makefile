@@ -1,5 +1,11 @@
 SHELL := /bin/bash
 
+# export variables to both build and run recipes for automatic rebuilding when pdm.lock is modified
+build run: export ENVIRONMENT ?= dev
+build run: export APP_NAME := accounting-service
+build run: export APP_VERSION := $(shell git describe --abbrev --dirty --always --tags)
+build run: export COMMIT_SHA := $(shell git rev-parse HEAD)
+
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
@@ -24,10 +30,6 @@ lint:  ## Run linters
 	pdm run ruff check
 	pdm run mypy app
 
-build: export ENVIRONMENT ?= dev
-build: export APP_NAME := accounting-service
-build: export APP_VERSION := $(shell git describe --abbrev --dirty --always --tags)
-build: export COMMIT_SHA := $(shell git rev-parse HEAD)
 build:  ## Build the docker images
 	docker compose --progress=plain build
 
@@ -39,15 +41,15 @@ kill:  ## Take down the application
 
 .PHONY: tests
 tests: build  ## Run tests in the app container
-	docker compose run app sh -c "\
+	docker compose run --rm app sh -c "\
 		alembic downgrade base && alembic upgrade head && \
 	    python -m pytest -vv --cov=app tests && \
 		python -m coverage xml && \
 		python -m coverage html"
 
 migration: build  ## Create the alembic migration
-	docker compose run app sh -c "\
+	docker compose run --rm app sh -c "\
 		alembic upgrade head && alembic revision --autogenerate"
 
 sh: build  ## Run a shell in the app container
-	docker compose run --rm --service-ports app bash
+	docker compose run --rm app bash

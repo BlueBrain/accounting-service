@@ -17,15 +17,16 @@ def _read_config_file(path: Path) -> dict | None:
         return None
 
 
-def _configure(name: str | None = None) -> logging.Logger:
+def _configure_logging() -> None:
     """Configure logging."""
-    logger = logging.getLogger(name or settings.APP_NAME)
     path = Path(__file__).parents[1] / settings.LOGGING_CONFIG
     if logging_config_dict := _read_config_file(path):
         logging.config.dictConfig(logging_config_dict)
-    if settings.LOGGING_LEVEL is not None:
-        logger.setLevel(settings.LOGGING_LEVEL)
-    return logger
 
 
-L = _configure()
+def get_logger(name: str) -> logging.Logger:
+    """Return a logger based on the given name."""
+    return logging.getLogger(name)
+
+
+_configure_logging()

@@ -1,20 +1,23 @@
 """Database session utils."""
 
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from app.logger import L
+from app.logger import get_logger
+
+L = get_logger(__name__)
 
 
-class DatabaseSessionFactory:
-    """DatabaseSessionFactory."""
+class DatabaseSessionManager:
+    """DatabaseSessionManager."""
 
     def __init__(self) -> None:
-        """Init the factory."""
+        """Init the manager."""
         self._engine: AsyncEngine | None = None
 
-    async def initialize(self, url: str, **kwargs) -> None:
+    def initialize(self, url: str, **kwargs) -> None:
         """Initialize the database engine."""
         if self._engine:
             err = "DB engine already initialized"
@@ -31,24 +34,19 @@ class DatabaseSessionFactory:
         self._engine = None
         L.info("DB engine has been closed")
 
-    async def __call__(self) -> AsyncIterator[AsyncSession]:
-        """Return a new database session."""
+    @asynccontextmanager
+    async def session(self) -> AsyncIterator[AsyncSession]:
+        """Yield a new database session."""
         if not self._engine:
             err = "DB engine not initialized"
             raise RuntimeError(err)
-        session = AsyncSession(
+        async with AsyncSession(
             self._engine,
             expire_on_commit=False,
             autocommit=False,
             autoflush=False,
-        )
-        try:
+        ) as session:
             yield session
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
 
 
-database_session_factory = DatabaseSessionFactory()
+database_session_manager = DatabaseSessionManager()

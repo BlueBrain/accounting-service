@@ -6,14 +6,18 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: INFO
+    level: DEBUG
     formatter: simple
     stream: ext://sys.stderr
 loggers:
+  app:
+    level: DEBUG
   uvicorn:
     level: INFO
-    handlers: [console]
-    propagate: no
+  sqlalchemy.engine:
+    level: INFO
+  sqlalchemy.pool:
+    level: INFO
 root:
   level: INFO
   handlers: [console]

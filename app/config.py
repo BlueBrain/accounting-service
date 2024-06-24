@@ -19,9 +19,18 @@ class Settings(BaseSettings):
     APP_DEBUG: bool = False
     COMMIT_SHA: str | None = None
 
+    UVICORN_PORT: int = 8000
+
     CORS_ORIGINS: list[str] = ["*"]
     LOGGING_CONFIG: str = "app/data/logging.yaml"
-    LOGGING_LEVEL: str | None = None
+
+    SQS_ENDPOINT_URL: str = "http://queue:9324"
+    SQS_QUEUES: dict[str, str] = {
+        "storage": "storage.fifo",
+        "short-jobs": "short-jobs.fifo",
+        "long-jobs": "long-jobs.fifo",
+    }
+    SQS_CLIENT_ERROR_SLEEP: float = 10
 
     DB_ENGINE: str = "postgresql+asyncpg"
     DB_USER: str = "accounting_service"
@@ -30,9 +39,7 @@ class Settings(BaseSettings):
     DB_PORT: int = 5432
     DB_NAME: str = "accounting_service"
 
-    DB_ECHO: bool = False
-    DB_ECHO_POOL: bool = False
-    DB_POOL_SIZE: int = 5
+    DB_POOL_SIZE: int = 30
     DB_POOL_PRE_PING: bool = True
     DB_MAX_OVERFLOW: int = 0
 

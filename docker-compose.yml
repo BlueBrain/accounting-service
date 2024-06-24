@@ -16,11 +16,14 @@ services:
     - SYS_PTRACE
     environment:
     - APP_DEBUG=true
-    - LOGGING_LEVEL=DEBUG
-    - UVICORN_RELOAD=true
+    - AWS_ACCESS_KEY_ID=xxx
+    - AWS_SECRET_ACCESS_KEY=xxx
+    - AWS_DEFAULT_REGION=us-east-1
+    - AWS_MAX_ATTEMPTS=3
+    - AWS_RETRY_MODE=standard
     develop:
       watch:
-      - action: sync
+      - action: sync+restart
         path: ./app
         target: /code/app
       - action: rebuild
@@ -28,6 +31,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      queue:
+        condition: service_started
     volumes:
       - ./tests:/code/tests  # to run tests
       - ./alembic/versions:/code/alembic/versions  # to write migration files
@@ -50,6 +55,15 @@ services:
     restart: unless-stopped
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  queue:
+    image: softwaremill/elasticmq-native:latest
+    container_name: accounting-service-queue
+    ports:
+      - "127.0.0.1:9324:9324"
+      - "127.0.0.1:9325:9325"
+    volumes:
+    - ./elasticmq.conf:/opt/elasticmq.conf
 
 volumes:
   pgdata: {}
