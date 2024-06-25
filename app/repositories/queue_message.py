@@ -19,7 +19,7 @@ class QueueMessageRepository(BaseRepository):
         queue_name: str,
         status: QueueMessageStatus,
         error: str | None = None,
-    ) -> int:
+    ) -> int | None:
         """Insert or update a record, and return a record counter >= 1."""
         query = insert(QueueMessage).values(
             message_id=msg["MessageId"],

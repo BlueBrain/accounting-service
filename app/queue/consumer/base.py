@@ -27,7 +27,8 @@ class QueueLoggerAdapter(logging.LoggerAdapter):
         self, msg: Any, kwargs: MutableMapping[str, Any]
     ) -> tuple[Any, MutableMapping[str, Any]]:
         """Process a log message."""
-        return f"[{self.extra['queue']}] {msg}", kwargs
+        queue_name = self.extra["queue"] if self.extra else ""
+        return f"[{queue_name}] {msg}", kwargs
 
 
 class QueueConsumer(ABC):
