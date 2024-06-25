@@ -8,6 +8,11 @@ This service is composed by:
 
 ## Local build and deployment
 
+Requirements:
+
+- [Docker compose](https://docs.docker.com/compose/) >= 2.24.4
+- [PDM](https://pdm-project.org/)
+
 Valid `make` targets:
 
 ```
@@ -20,8 +25,9 @@ lint                    Run linters
 build                   Build the docker images
 run                     Run the application in docker
 kill                    Take down the application
-tests                   Run tests in the app container
+test                    Run tests in the app container
 migration               Create the alembic migration
+config                  Show the docker-compose configuration in the current environment
 sh                      Run a shell in the app container
 ```
 

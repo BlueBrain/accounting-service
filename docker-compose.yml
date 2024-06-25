@@ -1,8 +1,6 @@
-# for local deployment
-
 services:
   app:
-    container_name: accounting-service-app
+    image: "accounting-service:${APP_VERSION}-${ENVIRONMENT}"
     build:
       dockerfile: Dockerfile
       args:
@@ -12,8 +10,6 @@ services:
         - COMMIT_SHA
     ports:
     - "127.0.0.1:8100:8000"
-    cap_add:
-    - SYS_PTRACE
     environment:
     - APP_DEBUG=true
     - AWS_ACCESS_KEY_ID=xxx
@@ -33,18 +29,47 @@ services:
         condition: service_healthy
       queue:
         condition: service_started
+
+  migration:
+    image: "accounting-service:${APP_VERSION}-${ENVIRONMENT}"
+    command:
+      - sh
+      - -cx
+      - |
+        alembic upgrade head &&
+        alembic revision --autogenerate
     volumes:
-      - ./tests:/code/tests  # to run tests
-      - ./alembic/versions:/code/alembic/versions  # to write migration files
+      - ./alembic/versions:/code/alembic/versions
+    depends_on:
+      db:
+        condition: service_healthy
+
+  test:
+    image: "accounting-service:${APP_VERSION}-${ENVIRONMENT}"
+    command:
+    - sh
+    - -cx
+    - |
+      alembic downgrade base &&
+      alembic upgrade head &&
+      python -m pytest -vv --cov=app tests &&
+      python -m coverage xml &&
+      python -m coverage html
+    environment:
+      - DB_HOST=db-test
+    volumes:
+      - ./tests:/code/tests
+    depends_on:
+      db-test:
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
-    container_name: accounting-service-db
     environment:
       POSTGRES_USER: accounting_service
       POSTGRES_PASSWORD: accounting_service
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U accounting_service"]
       interval: 10s
@@ -56,9 +81,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  db-test:
+    extends: db
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:5434:5432"
+    volumes: !reset []
+
   queue:
     image: softwaremill/elasticmq-native:latest
-    container_name: accounting-service-queue
     ports:
       - "127.0.0.1:9324:9324"
       - "127.0.0.1:9325:9325"
