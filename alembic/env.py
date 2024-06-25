@@ -1,4 +1,6 @@
 import asyncio
+import logging
+from collections.abc import Iterable
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -6,8 +8,12 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from alembic.environment import MigrationContext
+from alembic.operations import MigrationScript
 from app.config import settings
 from app.db.models import Base
+
+L = logging.getLogger("alembic.env")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,6 +32,24 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+
+def process_revision_directives(
+    _context: MigrationContext,
+    _revision: str | Iterable[str | None] | Iterable[str],
+    directives: list[MigrationScript],
+) -> None:
+    """Don't Generate Empty Migrations with Autogenerate.
+
+    From https://alembic.sqlalchemy.org/en/latest/cookbook.html
+    """
+    assert config.cmd_opts is not None
+    if getattr(config.cmd_opts, "autogenerate", False):
+        script = directives[0]
+        assert script.upgrade_ops is not None
+        if script.upgrade_ops.is_empty():
+            L.info("Ignoring empty migration")
+            directives[:] = []
 
 
 def run_migrations_offline() -> None:
@@ -53,7 +77,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        process_revision_directives=process_revision_directives,
+    )
 
     with context.begin_transaction():
         context.run_migrations()
