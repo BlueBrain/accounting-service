@@ -26,6 +26,7 @@ build                   Build the docker images
 run                     Run the application in docker
 kill                    Take down the application
 test                    Run tests in the app container
+test-local              Run tests locally
 migration               Create the alembic migration
 config                  Show the docker-compose configuration in the current environment
 sh                      Run a shell in the app container

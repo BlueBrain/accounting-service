@@ -41,6 +41,11 @@ kill:  ## Take down the application
 test: build  ## Run tests in the app container
 	docker compose run --rm test
 
+test-local:  ## Run tests locally
+	# faster, but it requires a test db already running
+	export DB_HOST=127.0.0.1 DB_PORT=5434 && \
+	pdm run python -m pytest -vv --cov=app tests
+
 migration: build  ## Create the alembic migration
 	docker compose run --rm migration
 
