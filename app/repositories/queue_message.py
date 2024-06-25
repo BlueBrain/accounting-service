@@ -1,3 +1,5 @@
+"""Queue message repository module."""
+
 from typing import Any
 
 import sqlalchemy as sa

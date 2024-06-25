@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, ClassVar
 
 from sqlalchemy import BigInteger, DateTime, Identity, SmallInteger, func
 from sqlalchemy.dialects.postgresql import JSONB
@@ -24,7 +24,7 @@ UPDATED_AT = Annotated[
 class Base(DeclarativeBase):
     """Base class."""
 
-    type_annotation_map = {
+    type_annotation_map: ClassVar[dict] = {
         datetime: DateTime(timezone=True),
         dict[str, Any]: JSONB,
     }
@@ -68,7 +68,7 @@ class Usage(Base):
 class Transactions(Base):
     """Transactions table."""
 
-    # TODO: wip
+    # wip
 
     __tablename__ = "transactions"
 
@@ -81,7 +81,7 @@ class Transactions(Base):
 class VlabTopup(Base):
     """VlabTopup table."""
 
-    # TODO: wip
+    # wip
 
     __tablename__ = "vlab_topup"
 

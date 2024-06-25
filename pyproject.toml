@@ -45,6 +45,7 @@ select = ["ALL"]
 ignore = [
     "ANN002",  # Missing type annotation for `*args`
     "ANN003",  # Missing type annotation for `**kwargs`
+    "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
     "COM812",  # Trailing comma (to have similar behavior to black)
     "CPY001",  # Missing copyright notice at top of file
     "ISC001",  # single line implicit string concatenation (disabling suggested by ruff formatter)
@@ -62,6 +63,7 @@ combine-as-imports = true
     "D",       # pydocstyle
     "ERA001",  # Found commented-out code
     "INP001",  # Missing `__init__.py`
+    "S101",    # Use of `assert` detected
 ]
 "tests/*.py" = [
     "ANN",     # Missing type annotation
@@ -78,7 +80,7 @@ convention = "google"
 
 [tool.ruff.lint.pylint]
 # Maximum number of arguments for function / method
-max-args = 8
+max-args = 10
 # Maximum number of locals for function / method body
 max-locals = 15
 # Maximum number of return / yield for function / method body

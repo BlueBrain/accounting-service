@@ -1,4 +1,4 @@
-from functools import wraps
+"""Base repository module."""
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,19 +9,3 @@ class BaseRepository:
     def __init__(self, db: AsyncSession) -> None:
         """Init the repository."""
         self.db = db
-
-
-def autocommit(func):
-    """Automatically commit the transaction."""
-
-    @wraps(func)
-    async def wrapper(self: BaseRepository, *args, **kwargs):
-        """Wrap the decorated function."""
-        try:
-            return await func(self, *args, **kwargs)
-        except Exception:
-            raise
-        else:
-            await self.db.commit()
-
-    return wrapper

@@ -1,3 +1,5 @@
+"""Usage message repository module."""
+
 from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
@@ -44,11 +46,13 @@ class UsageRepository(BaseRepository):
         await self.db.commit()
 
     async def get_all_usages_rows(self) -> Sequence[sa.Row]:
+        """Get all the usage rows as Row objects."""
         query = sa.select(Usage)
         res = await self.db.execute(query)
         return res.all()
 
     async def get_all_usages(self) -> Sequence[Usage]:
+        """Get all the usage rows as Usage objects."""
         query = sa.select(Usage)
         res = await self.db.scalars(query)
         return res.all()

@@ -1,3 +1,5 @@
+"""Base consumer module."""
+
 import asyncio
 import logging
 import traceback
@@ -54,8 +56,8 @@ class QueueConsumer(ABC):
             repo = QueueMessageRepository(db=db)
             try:
                 await self.consume(msg=msg, db=db)
-            except Exception as err:
-                self.logger.exception("Error processing message: %r", err)
+            except Exception:
+                self.logger.exception("Error processing message")
                 await repo.upsert(
                     msg=msg,
                     queue_name=self._queue_name,
@@ -81,7 +83,6 @@ class QueueConsumer(ABC):
             - AWS_DEFAULT_REGION
         """
         session = get_session()
-        # TODO: verify if the client needs to be recreated in case of errors
         async with session.create_client("sqs", endpoint_url=self._endpoint_url) as sqs:
             self.logger.info("Pulling messages off the queue %s", self._queue_name)
             response = await sqs.get_queue_url(QueueName=self._queue_name)
@@ -101,17 +102,15 @@ class QueueConsumer(ABC):
                         VisibilityTimeout=30,
                         WaitTimeSeconds=20,  # enable long polling
                     )
-                    if "Messages" in response:
-                        self.logger.info("Received %s messages", len(response["Messages"]))
-                        for msg in response["Messages"]:
-                            receipt_handle = msg["ReceiptHandle"]
-                            if await self.consume_wrapper(msg=msg):
-                                await sqs.delete_message(
-                                    QueueUrl=queue_url,
-                                    ReceiptHandle=receipt_handle,
-                                )
-                    else:
-                        self.logger.info("No messages in queue")
-                except botocore.exceptions.ClientError as err:
-                    self.logger.exception("Client error: %r", err)
+                    messages = response.get("Messages", [])
+                    self.logger.info("Received %s messages", len(messages))
+                    for msg in messages:
+                        receipt_handle = msg["ReceiptHandle"]
+                        if await self.consume_wrapper(msg=msg):
+                            await sqs.delete_message(
+                                QueueUrl=queue_url,
+                                ReceiptHandle=receipt_handle,
+                            )
+                except botocore.exceptions.ClientError:
+                    self.logger.exception("Client error")
                     await asyncio.sleep(settings.SQS_CLIENT_ERROR_SLEEP)

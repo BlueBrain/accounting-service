@@ -6,7 +6,8 @@ import contextlib
 import uvicorn
 import uvloop
 
-from app import logger  # noqa  # ensure that logging is configured
+# ensure that logging is configured at the beginning
+from app import logger  # noqa: F401
 from app.config import settings
 from app.db.session import database_session_manager
 from app.queue.consumer.long_jobs import LongJobsQueueConsumer
@@ -14,7 +15,7 @@ from app.queue.consumer.short_jobs import ShortJobsQueueConsumer
 from app.queue.consumer.storage import StorageQueueConsumer
 
 
-async def main():
+async def main() -> None:
     """Init and run all the async tasks."""
     database_session_manager.initialize(
         url=settings.DB_URI,

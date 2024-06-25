@@ -1,3 +1,5 @@
+"""Short jobs consumer module."""
+
 import json
 from datetime import UTC, datetime
 from typing import Any
