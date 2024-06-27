@@ -14,7 +14,7 @@ from app.repositories.usage import UsageRepository
 class StorageQueueConsumer(QueueConsumer):
     """Storage queue consumer."""
 
-    async def consume(self, msg: dict[str, Any], db: AsyncSession) -> None:
+    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> None:
         """Consume the message."""
         self.logger.info("Message received: %s", msg)
         body = json.loads(msg["Body"])

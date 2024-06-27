@@ -28,10 +28,11 @@ class UsageRepository(BaseRepository):
         started_at: datetime,
         finished_at: datetime | None,
         properties: dict | None,
-    ) -> None:
+    ) -> Usage:
         """Add usage."""
-        self.db.add(
-            Usage(
+        query = (
+            sa.insert(Usage)
+            .values(
                 job_id=job_id,
                 vlab_id=vlab_id,
                 proj_id=proj_id,
@@ -42,8 +43,11 @@ class UsageRepository(BaseRepository):
                 finished_at=finished_at,
                 properties=properties,
             )
+            .returning(Usage)
         )
+        result = (await self.db.execute(query)).scalar_one()
         await self.db.commit()
+        return result
 
     async def get_all_usages_rows(self) -> Sequence[sa.Row]:
         """Get all the usage rows as Row objects."""

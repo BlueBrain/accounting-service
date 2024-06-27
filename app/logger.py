@@ -17,7 +17,7 @@ def _read_config_file(path: Path) -> dict | None:
         return None
 
 
-def _configure_logging() -> None:
+def configure_logging() -> None:
     """Configure logging."""
     path = Path(__file__).parents[1] / settings.LOGGING_CONFIG
     if logging_config_dict := _read_config_file(path):
@@ -27,6 +27,3 @@ def _configure_logging() -> None:
 def get_logger(name: str) -> logging.Logger:
     """Return a logger based on the given name."""
     return logging.getLogger(name)
-
-
-_configure_logging()

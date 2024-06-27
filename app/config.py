@@ -24,12 +24,9 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["*"]
     LOGGING_CONFIG: str = "app/data/logging.yaml"
 
-    SQS_ENDPOINT_URL: str = "http://queue:9324"
-    SQS_QUEUES: dict[str, str] = {
-        "storage": "storage.fifo",
-        "short-jobs": "short-jobs.fifo",
-        "long-jobs": "long-jobs.fifo",
-    }
+    SQS_STORAGE_QUEUE_NAME: str = "storage.fifo"
+    SQS_SHORT_JOBS_QUEUE_NAME: str = "short-jobs.fifo"
+    SQS_LONG_JOBS_QUEUE_NAME: str = "long-jobs.fifo"
     SQS_CLIENT_ERROR_SLEEP: float = 10
 
     DB_ENGINE: str = "postgresql+asyncpg"

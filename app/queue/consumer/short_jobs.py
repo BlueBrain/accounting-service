@@ -10,6 +10,6 @@ from app.queue.consumer.base import QueueConsumer
 class ShortJobsQueueConsumer(QueueConsumer):
     """Short jobs queue consumer."""
 
-    async def consume(self, msg: dict[str, Any], db: AsyncSession) -> None:  # noqa: ARG002
+    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> None:  # noqa: ARG002
         """Consume the message."""
         self.logger.info("Message received: %s", msg)

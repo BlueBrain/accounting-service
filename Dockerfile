@@ -1,11 +1,10 @@
 ARG PYTHON_BASE=3.12
-ARG ENVIRONMENT
 
 # build stage
 FROM python:$PYTHON_BASE AS builder
 SHELL ["/bin/bash", "-e", "-o", "pipefail", "-c"]
 ARG ENVIRONMENT
-ARG PDM_VERSION=2.15.4
+ARG PDM_VERSION=2.16.1
 ENV \
     PDM_CHECK_UPDATE=false \
     PDM_NO_EDITABLE=true \

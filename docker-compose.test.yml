@@ -1,0 +1,40 @@
+services:
+  test:
+    profiles: [test]
+    image: "${IMAGE_NAME}:${IMAGE_TAG}"
+    command:
+    - sh
+    - -cx
+    - |
+      alembic downgrade base &&
+      alembic upgrade head &&
+      python -m pytest &&
+      python -m coverage xml &&
+      python -m coverage html
+    environment:
+    - DB_HOST=db-test
+    - DB_PORT=5432
+    - AWS_DEFAULT_REGION=us-east-1
+    - AWS_ENDPOINT_URL=http://queue:9324
+    volumes:
+    - ./tests:/code/tests
+    depends_on:
+      db-test:
+        condition: service_healthy
+
+  db-test:
+    profiles: [test]
+    image: postgres:16-alpine
+    environment:
+    - POSTGRES_USER=accounting_service
+    - POSTGRES_PASSWORD=accounting_service
+    ports:
+    - "127.0.0.1:5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accounting_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+      start_interval: 1s
+    restart: "no"

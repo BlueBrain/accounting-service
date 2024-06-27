@@ -25,7 +25,9 @@ jobs:
       - name: Run linters
         run: make lint
       - name: Run tests
-        run: make tests
+        run: make test
       - name: Cleanup
         if: ${{ always() }}
-        run: make kill
+        run: |
+          docker compose down --remove-orphans --volumes --rmi all
+          docker system prune --force --volumes

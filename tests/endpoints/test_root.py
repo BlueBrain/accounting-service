@@ -1,19 +1,19 @@
-def test_root(client):
-    response = client.get("/", follow_redirects=False)
+async def test_root(api_client):
+    response = await api_client.get("/", follow_redirects=False)
 
     assert response.status_code == 302
     assert response.next_request.url.path == "/docs"
 
 
-def test_health(client):
-    response = client.get("/health")
+async def test_health(api_client):
+    response = await api_client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "OK"}
 
 
-def test_version(client):
-    response = client.get("/version")
+async def test_version(api_client):
+    response = await api_client.get("/version")
 
     assert response.status_code == 200
     response_json = response.json()
@@ -23,8 +23,8 @@ def test_version(client):
     assert response_json["commit_sha"] is not None
 
 
-def test_error(client):
-    response = client.get("/error")
+async def test_error(api_client):
+    response = await api_client.get("/error")
 
     assert response.status_code == 400
     assert response.json() == {"message": "ApiError: Generic error returned for testing purposes"}

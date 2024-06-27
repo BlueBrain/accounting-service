@@ -24,11 +24,11 @@ check-deps              Check that the dependencies in the existing lock file ar
 lint                    Run linters
 build                   Build the docker images
 run                     Run the application in docker
-kill                    Take down the application
-test                    Run tests in the app container
+kill                    Take down the application and remove the volumes
+test                    Run tests in docker
 test-local              Run tests locally
 migration               Create the alembic migration
-config                  Show the docker-compose configuration in the current environment
+show-config             Show the docker-compose configuration in the current environment
 sh                      Run a shell in the app container
 ```
 

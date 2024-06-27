@@ -1,0 +1,67 @@
+services:
+  app:
+    profiles: [run]
+    image: "${IMAGE_NAME}:${IMAGE_TAG}"
+    build:
+      dockerfile: Dockerfile
+      args:
+      - ENVIRONMENT
+      - APP_NAME
+      - APP_VERSION
+      - COMMIT_SHA
+    ports:
+    - "127.0.0.1:8100:8000"
+    environment:
+    - DB_HOST=db
+    - DB_PORT=5432
+    - AWS_ACCESS_KEY_ID=xxx
+    - AWS_SECRET_ACCESS_KEY=xxx
+    - AWS_ENDPOINT_URL=http://queue:9324
+    - AWS_DEFAULT_REGION=us-east-1
+    - AWS_MAX_ATTEMPTS=3
+    - AWS_RETRY_MODE=standard
+    - APP_DEBUG=true
+    - PYTHONASYNCIODEBUG=1
+    develop:
+      watch:
+      - action: sync+restart
+        path: ./app
+        target: /code/app
+      - action: rebuild
+        path: pdm.lock
+    depends_on:
+      db:
+        condition: service_healthy
+      queue:
+        condition: service_started
+
+  db:
+    profiles: [run]
+    image: postgres:16-alpine
+    environment:
+    - POSTGRES_USER=accounting_service
+    - POSTGRES_PASSWORD=accounting_service
+    ports:
+    - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accounting_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+      start_interval: 1s
+    restart: unless-stopped
+    volumes:
+    - pgdata:/var/lib/postgresql/data
+
+  queue:
+    profiles: [run]
+    image: softwaremill/elasticmq-native:latest
+    ports:
+    - "127.0.0.1:9324:9324"
+    - "127.0.0.1:9325:9325"
+    volumes:
+    - ./elasticmq.conf:/opt/elasticmq.conf
+
+volumes:
+  pgdata: {}

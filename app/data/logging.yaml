@@ -18,6 +18,12 @@ loggers:
     level: INFO
   sqlalchemy.pool:
     level: INFO
+  asyncio:
+    level: INFO
+  botocore:
+    level: INFO
+  aiobotocore:
+    level: INFO
 root:
   level: INFO
   handlers: [console]
