@@ -25,6 +25,7 @@ lint                    Run linters
 build                   Build the docker images
 run                     Run the application in docker
 kill                    Take down the application and remove the volumes
+clean                   Take down the application and remove the volumes and the images
 test                    Run tests in docker
 test-local              Run tests locally
 migration               Create the alembic migration

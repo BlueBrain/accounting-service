@@ -42,6 +42,10 @@ kill: export COMPOSE_PROFILES=run,test
 kill:  ## Take down the application and remove the volumes
 	docker compose down --remove-orphans --volumes
 
+clean: export COMPOSE_PROFILES=run,test
+clean: ## Take down the application and remove the volumes and the images
+	docker compose down --remove-orphans --volumes --rmi all
+
 test: build  ## Run tests in docker
 	docker compose run --rm test
 

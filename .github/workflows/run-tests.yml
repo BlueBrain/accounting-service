@@ -29,5 +29,5 @@ jobs:
       - name: Cleanup
         if: ${{ always() }}
         run: |
-          docker compose down --remove-orphans --volumes --rmi all
+          make clean
           docker system prune --force --volumes
