@@ -61,6 +61,7 @@ class Usage(Base):
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
     started_at: Mapped[datetime]
+    last_alive_at: Mapped[datetime]
     finished_at: Mapped[datetime | None]
     properties: Mapped[dict[str, Any] | None]
 

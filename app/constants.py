@@ -3,16 +3,24 @@
 from enum import StrEnum
 
 
+class QueueMessageStatus(StrEnum):
+    """Queue Message Status."""
+
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class ServiceType(StrEnum):
-    """Service type."""
+    """Service Type."""
 
     STORAGE = "storage"
     SHORT_JOBS = "short-jobs"
     LONG_JOBS = "long-jobs"
 
 
-class QueueMessageStatus(StrEnum):
-    """Queue message status."""
+class LongJobStatus(StrEnum):
+    """Long Job Status."""
 
-    COMPLETED = "completed"
-    FAILED = "failed"
+    STARTED = "started"
+    RUNNING = "running"
+    FINISHED = "finished"

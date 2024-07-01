@@ -75,8 +75,8 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
         "type": "storage",
         "vlab_id": "00000000-0000-0000-0000-000000000000",
         "proj_id": "00000000-0000-0000-0000-000000000001",
-        "units": "1073741824",
-        "timestamp_ms": "1719477803993",
+        "size": "1073741824",
+        "timestamp": "1719477803993",
     }
     _prepare_stub(sqs_stubber, queue_url, message_id, receipt_handle, message_body)
 

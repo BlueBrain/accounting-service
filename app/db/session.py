@@ -46,7 +46,13 @@ class DatabaseSessionManager:
             autocommit=False,
             autoflush=False,
         ) as session:
-            yield session
+            try:
+                yield session
+            except Exception:
+                await session.rollback()
+                raise
+            else:
+                await session.commit()
 
 
 database_session_manager = DatabaseSessionManager()
