@@ -13,11 +13,11 @@ from aiobotocore.client import AioBaseClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.constants import QueueMessageStatus
+from app.constants import EventStatus
 from app.db.session import database_session_manager
 from app.logger import get_logger
 from app.queue.utils import create_default_sqs_client, get_queue_url
-from app.repositories.queue_message import QueueMessageRepository
+from app.repositories.queue_message import EventRepository
 
 L = get_logger(__name__)
 
@@ -69,7 +69,7 @@ class QueueConsumer(ABC):
         The message is stored for future inspection.
         """
         async with database_session_manager.session() as db:
-            repo = QueueMessageRepository(db=db)
+            repo = EventRepository(db=db)
             try:
                 result_id = await self._consume(msg=msg, db=db)
             except Exception:
@@ -79,7 +79,7 @@ class QueueConsumer(ABC):
                 await repo.upsert(
                     msg=msg,
                     queue_name=self._queue_name,
-                    status=QueueMessageStatus.FAILED,
+                    status=EventStatus.FAILED,
                     error=traceback.format_exc(),
                 )
                 return False
@@ -87,7 +87,7 @@ class QueueConsumer(ABC):
                 await repo.upsert(
                     msg=msg,
                     queue_name=self._queue_name,
-                    status=QueueMessageStatus.COMPLETED,
+                    status=EventStatus.COMPLETED,
                     result_id=result_id,
                 )
                 return True

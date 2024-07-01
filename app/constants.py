@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 
-class QueueMessageStatus(StrEnum):
+class EventStatus(StrEnum):
     """Queue Message Status."""
 
     COMPLETED = "completed"

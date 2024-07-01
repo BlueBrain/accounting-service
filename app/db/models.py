@@ -9,7 +9,7 @@ from sqlalchemy import BigInteger, DateTime, Identity, SmallInteger, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from app.constants import QueueMessageStatus, ServiceType
+from app.constants import EventStatus, ServiceType
 
 CREATED_AT = Annotated[
     datetime,
@@ -30,15 +30,15 @@ class Base(DeclarativeBase):
     }
 
 
-class QueueMessage(Base):
-    """Queue messages table."""
+class Event(Base):
+    """Queue events table."""
 
-    __tablename__ = "queue_message"
+    __tablename__ = "event"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     message_id: Mapped[uuid.UUID] = mapped_column(index=True, unique=True)
     queue_name: Mapped[str]
-    status: Mapped[QueueMessageStatus]
+    status: Mapped[EventStatus]
     attributes: Mapped[dict[str, Any]]
     body: Mapped[str | None]
     error: Mapped[str | None]

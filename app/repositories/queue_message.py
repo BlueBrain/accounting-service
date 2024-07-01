@@ -5,24 +5,24 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert
 
-from app.constants import QueueMessageStatus
-from app.db.models import QueueMessage
+from app.constants import EventStatus
+from app.db.models import Event
 from app.repositories.base import BaseRepository
 
 
-class QueueMessageRepository(BaseRepository):
-    """QueueMessageRepository."""
+class EventRepository(BaseRepository):
+    """EventRepository."""
 
     async def upsert(
         self,
         msg: dict[str, Any],
         queue_name: str,
-        status: QueueMessageStatus,
+        status: EventStatus,
         error: str | None = None,
         result_id: int | None = None,
     ) -> int | None:
         """Insert or update a record, and return a record counter >= 1."""
-        query = insert(QueueMessage).values(
+        query = insert(Event).values(
             message_id=msg["MessageId"],
             queue_name=queue_name,
             status=status,
@@ -41,8 +41,8 @@ class QueueMessageRepository(BaseRepository):
                 "body": msg["Body"],
                 "error": error,
                 "result_id": result_id,
-                "counter": QueueMessage.counter + 1,
+                "counter": Event.counter + 1,
                 "updated_at": sa.func.now(),
             },
-        ).returning(QueueMessage.counter)
+        ).returning(Event.counter)
         return (await self.db.execute(query)).scalar_one()

@@ -6,7 +6,7 @@ import pytest
 import sqlalchemy as sa
 
 from app.config import settings
-from app.db.models import QueueMessage, Usage
+from app.db.models import Event, Usage
 from app.queue.consumer import storage as test_module
 
 pytestmark = pytest.mark.usefixtures("db_cleanup")
@@ -91,7 +91,7 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     sqs_stubber.assert_no_pending_responses()
 
     # verify the content of the db
-    query = sa.select(QueueMessage)
+    query = sa.select(Event)
     records = (await db.scalars(query)).all()
     assert len(records) == 1
     assert records[0].message_id == UUID(message_id)
