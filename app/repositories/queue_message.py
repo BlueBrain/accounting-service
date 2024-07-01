@@ -19,6 +19,7 @@ class QueueMessageRepository(BaseRepository):
         queue_name: str,
         status: QueueMessageStatus,
         error: str | None = None,
+        result_id: int | None = None,
     ) -> int | None:
         """Insert or update a record, and return a record counter >= 1."""
         query = insert(QueueMessage).values(
@@ -28,6 +29,7 @@ class QueueMessageRepository(BaseRepository):
             attributes=msg["Attributes"],
             body=msg["Body"],
             error=error,
+            result_id=result_id,
             counter=1,
         )
         query = query.on_conflict_do_update(
@@ -38,10 +40,9 @@ class QueueMessageRepository(BaseRepository):
                 "attributes": msg["Attributes"],
                 "body": msg["Body"],
                 "error": error,
+                "result_id": result_id,
                 "counter": QueueMessage.counter + 1,
                 "updated_at": sa.func.now(),
             },
         ).returning(QueueMessage.counter)
-        res = await self.db.execute(query)
-        await self.db.commit()
-        return res.scalar()
+        return (await self.db.execute(query)).scalar_one()

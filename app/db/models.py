@@ -35,12 +35,14 @@ class QueueMessage(Base):
 
     __tablename__ = "queue_message"
 
-    message_id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    message_id: Mapped[uuid.UUID] = mapped_column(index=True, unique=True)
     queue_name: Mapped[str]
     status: Mapped[QueueMessageStatus]
     attributes: Mapped[dict[str, Any]]
     body: Mapped[str | None]
     error: Mapped[str | None]
+    result_id: Mapped[int | None]
     counter: Mapped[int] = mapped_column(SmallInteger)
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]

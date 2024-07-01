@@ -60,7 +60,7 @@ class QueueConsumer(ABC):
         return self._queue_name
 
     @abstractmethod
-    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> None:
+    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> int:
         """Consume the message."""
 
     async def _wrap(self, msg: dict[str, Any]) -> bool:
@@ -71,7 +71,7 @@ class QueueConsumer(ABC):
         async with database_session_manager.session() as db:
             repo = QueueMessageRepository(db=db)
             try:
-                await self._consume(msg=msg, db=db)
+                result_id = await self._consume(msg=msg, db=db)
             except Exception:
                 self.logger.exception("Error processing message")
                 # ensure that any pending change is rolled back
@@ -88,6 +88,7 @@ class QueueConsumer(ABC):
                     msg=msg,
                     queue_name=self._queue_name,
                     status=QueueMessageStatus.COMPLETED,
+                    result_id=result_id,
                 )
                 return True
 
