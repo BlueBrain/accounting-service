@@ -1,6 +1,6 @@
 """Ledger repository module."""
 
-from datetime import date
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -22,7 +22,7 @@ class LedgerRepository(BaseRepository):
         amount: Decimal,
         debited_from: UUID,
         credited_to: UUID,
-        transaction_date: date,
+        transaction_datetime: datetime,
         transaction_type: TransactionType,
         usage_id: int | None,
         properties: dict | None = None,
@@ -31,7 +31,7 @@ class LedgerRepository(BaseRepository):
         query = (
             sa.insert(Journal)
             .values(
-                transaction_date=transaction_date,
+                transaction_datetime=transaction_datetime,
                 transaction_type=transaction_type,
                 usage_id=usage_id,
                 properties=properties,

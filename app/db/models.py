@@ -80,7 +80,7 @@ class Journal(Base):
     __tablename__ = "journal"
 
     id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
-    transaction_date: Mapped[date]
+    transaction_datetime: Mapped[datetime]
     transaction_type: Mapped[TransactionType]
     usage_id: Mapped[BIGINT | None] = mapped_column(ForeignKey("usage.id"))
     properties: Mapped[dict[str, Any] | None]

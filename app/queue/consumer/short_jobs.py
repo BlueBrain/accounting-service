@@ -41,7 +41,7 @@ class ShortJobsQueueConsumer(QueueConsumer):
             amount=amount,
             debited_from=reservation_account.id,
             credited_to=system_account.id,
-            transaction_date=event.timestamp.date(),
+            transaction_datetime=event.timestamp,
             transaction_type=TransactionType.CHARGE_SHORT_JOBS,
             usage_id=usage.id,
         )
