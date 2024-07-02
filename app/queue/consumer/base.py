@@ -17,7 +17,7 @@ from app.constants import EventStatus
 from app.db.session import database_session_manager
 from app.logger import get_logger
 from app.queue.utils import create_default_sqs_client, get_queue_url
-from app.repositories.queue_message import EventRepository
+from app.repositories.event import EventRepository
 
 L = get_logger(__name__)
 

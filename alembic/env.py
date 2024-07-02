@@ -3,6 +3,7 @@ import logging
 from collections.abc import Iterable
 from logging.config import fileConfig
 
+import alembic_postgresql_enum  # noqa
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config

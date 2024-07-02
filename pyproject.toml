@@ -9,6 +9,7 @@ authors = [
 dependencies = [
     "aiobotocore",
     "alembic",
+    "alembic-postgresql-enum",
     "asyncpg",
     "botocore",
     "fastapi",
@@ -26,12 +27,12 @@ distribution = false
 
 [tool.pdm.dev-dependencies]
 dev = [
+    "coverage[toml]",
     "httpx",
+    "mypy",
     "pytest",
     "pytest-asyncio<0.22",  # https://github.com/pytest-dev/pytest-asyncio/issues/706
     "pytest-cov",
-    "coverage[toml]",
-    "mypy",
     "ruff",
     "types-PyYAML",
 ]

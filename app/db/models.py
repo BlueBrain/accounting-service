@@ -1,24 +1,16 @@
-"""Models."""
+"""DB Models."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, Any, ClassVar
+from typing import Any, ClassVar
 
-from sqlalchemy import BigInteger, DateTime, Identity, SmallInteger, func
+from sqlalchemy import DateTime, ForeignKey, Identity, SmallInteger
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from app.constants import EventStatus, ServiceType
-
-CREATED_AT = Annotated[
-    datetime,
-    mapped_column(DateTime(timezone=True), server_default=func.now(), index=True),
-]
-UPDATED_AT = Annotated[
-    datetime,
-    mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now()),
-]
+from app.constants import AccountType, EventStatus, ServiceType, TransactionType
+from app.db.types import BIGINT, CREATED_AT, UPDATED_AT
 
 
 class Base(DeclarativeBase):
@@ -35,7 +27,7 @@ class Event(Base):
 
     __tablename__ = "event"
 
-    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
     message_id: Mapped[uuid.UUID] = mapped_column(index=True, unique=True)
     queue_name: Mapped[str]
     status: Mapped[EventStatus]
@@ -53,13 +45,13 @@ class Usage(Base):
 
     __tablename__ = "usage"
 
-    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
     vlab_id: Mapped[uuid.UUID] = mapped_column(index=True)
     proj_id: Mapped[uuid.UUID] = mapped_column(index=True)
     job_id: Mapped[uuid.UUID | None] = mapped_column(index=True)
     service_type: Mapped[ServiceType]
     service_subtype: Mapped[str | None]
-    units: Mapped[int] = mapped_column(BigInteger)
+    units: Mapped[BIGINT]
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
     started_at: Mapped[datetime]
@@ -68,29 +60,46 @@ class Usage(Base):
     properties: Mapped[dict[str, Any] | None]
 
 
-class Transactions(Base):
-    """Transactions table."""
+class Account(Base):
+    """Account table."""
 
-    # wip
+    __tablename__ = "account"
 
-    __tablename__ = "transactions"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    account_type: Mapped[AccountType]
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("account.id"))
+    name: Mapped[str]
+    enabled: Mapped[bool]
+    # children: Mapped[list["Account"]] = relationship(back_populates="parent")
+    # parent: Mapped["Account"] = relationship(back_populates="children", remote_side=[id])
+    # ledger_entries: Mapped[list["Ledger"]] = relationship(back_populates="account")
+    created_at: Mapped[CREATED_AT]
+    updated_at: Mapped[UPDATED_AT]
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    vlab_id: Mapped[uuid.UUID] = mapped_column(index=True)
-    proj_id: Mapped[uuid.UUID] = mapped_column(index=True)
-    amount: Mapped[Decimal]
+
+class Journal(Base):
+    """Journal table."""
+
+    __tablename__ = "journal"
+
+    id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
+    transaction_date: Mapped[date]
+    transaction_type: Mapped[TransactionType]
+    usage_id: Mapped[BIGINT | None] = mapped_column(ForeignKey("usage.id"))
+    properties: Mapped[dict[str, Any] | None]
+    # ledger_entries: Mapped[list["Ledger"]] = relationship(back_populates="journal")
+    created_at: Mapped[CREATED_AT]
 
 
-class VlabTopup(Base):
-    """VlabTopup table."""
+class Ledger(Base):
+    """Ledger table."""
 
-    # wip
+    __tablename__ = "ledger"
 
-    __tablename__ = "vlab_topup"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    vlab_id: Mapped[uuid.UUID] = mapped_column(index=True)
-    proj_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id"))
+    journal_id: Mapped[BIGINT] = mapped_column(ForeignKey("journal.id"))
+    # account: Mapped["Account"] = relationship(back_populates="ledger_entries")
+    # journal: Mapped["Journal"] = relationship(back_populates="ledger_entries")
     amount: Mapped[Decimal]
     created_at: Mapped[CREATED_AT]
-    stripe_event_id: Mapped[str]

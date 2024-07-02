@@ -1,26 +1,47 @@
 """Constants module."""
 
-from enum import StrEnum
+from enum import StrEnum, auto
 
 
 class EventStatus(StrEnum):
     """Queue Message Status."""
 
-    COMPLETED = "completed"
-    FAILED = "failed"
+    COMPLETED = auto()
+    FAILED = auto()
 
 
 class ServiceType(StrEnum):
     """Service Type."""
 
-    STORAGE = "storage"
-    SHORT_JOBS = "short-jobs"
-    LONG_JOBS = "long-jobs"
+    STORAGE = auto()
+    SHORT_JOBS = auto()
+    LONG_JOBS = auto()
 
 
 class LongJobStatus(StrEnum):
     """Long Job Status."""
 
-    STARTED = "started"
-    RUNNING = "running"
-    FINISHED = "finished"
+    STARTED = auto()
+    RUNNING = auto()
+    FINISHED = auto()
+
+
+class AccountType(StrEnum):
+    """Account Type."""
+
+    SYS = auto()
+    VLAB = auto()
+    PROJ = auto()
+    RSV = auto()
+
+
+class TransactionType(StrEnum):
+    """Transaction Type."""
+
+    TOPUP = auto()  # from SYS to VLAB
+    ASSIGN = auto()  # from VLAB to PROJ, or from PROJ to VLAB
+    RESERVE = auto()  # from PROJ to RSV
+    RELEASE = auto()  # from RSV to PROJ
+    CHARGE_SHORT_JOBS = auto()  # from RSV to SYS, or from PROJ to SYS
+    CHARGE_LONG_JOBS = auto()  # from RSV to SYS, or from PROJ to SYS
+    CHARGE_STORAGE = auto()  # from RSV to SYS, or from PROJ to SYS
