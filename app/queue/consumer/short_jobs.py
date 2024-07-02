@@ -23,7 +23,6 @@ class ShortJobsQueueConsumer(QueueConsumer):
         usage_repo = UsageRepository(db=db)
         account_repo = AccountRepository(db=db)
         ledger_repo = LedgerRepository(db=db)
-        # price_repo = PriceRepository(db=db)
 
         usage = await usage_repo.add_usage(
             vlab_id=event.vlab_id,

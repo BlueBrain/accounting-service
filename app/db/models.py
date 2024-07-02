@@ -34,7 +34,7 @@ class Event(Base):
     attributes: Mapped[dict[str, Any]]
     body: Mapped[str | None]
     error: Mapped[str | None]
-    result_id: Mapped[int | None]
+    usage_id: Mapped[int | None] = mapped_column(ForeignKey("usage.id"))
     counter: Mapped[int] = mapped_column(SmallInteger)
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]

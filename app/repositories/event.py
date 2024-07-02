@@ -19,7 +19,7 @@ class EventRepository(BaseRepository):
         queue_name: str,
         status: EventStatus,
         error: str | None = None,
-        result_id: int | None = None,
+        usage_id: int | None = None,
     ) -> int | None:
         """Insert or update a record, and return a record counter >= 1."""
         query = insert(Event).values(
@@ -29,7 +29,7 @@ class EventRepository(BaseRepository):
             attributes=msg["Attributes"],
             body=msg["Body"],
             error=error,
-            result_id=result_id,
+            usage_id=usage_id,
             counter=1,
         )
         query = query.on_conflict_do_update(
@@ -40,7 +40,7 @@ class EventRepository(BaseRepository):
                 "attributes": msg["Attributes"],
                 "body": msg["Body"],
                 "error": error,
-                "result_id": result_id,
+                "usage_id": usage_id,
                 "counter": Event.counter + 1,
                 "updated_at": sa.func.now(),
             },

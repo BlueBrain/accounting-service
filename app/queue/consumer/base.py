@@ -71,7 +71,7 @@ class QueueConsumer(ABC):
         async with database_session_manager.session() as db:
             repo = EventRepository(db=db)
             try:
-                result_id = await self._consume(msg=msg, db=db)
+                usage_id = await self._consume(msg=msg, db=db)
             except Exception:
                 self.logger.exception("Error processing message")
                 # ensure that any pending change is rolled back
@@ -88,7 +88,7 @@ class QueueConsumer(ABC):
                     msg=msg,
                     queue_name=self._queue_name,
                     status=EventStatus.COMPLETED,
-                    result_id=result_id,
+                    usage_id=usage_id,
                 )
                 return True
 
