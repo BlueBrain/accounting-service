@@ -70,9 +70,6 @@ class Account(Base):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("account.id"))
     name: Mapped[str]
     enabled: Mapped[bool]
-    # children: Mapped[list["Account"]] = relationship(back_populates="parent")
-    # parent: Mapped["Account"] = relationship(back_populates="children", remote_side=[id])
-    # ledger_entries: Mapped[list["Ledger"]] = relationship(back_populates="account")
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
 
@@ -87,7 +84,6 @@ class Journal(Base):
     transaction_type: Mapped[TransactionType]
     usage_id: Mapped[BIGINT | None] = mapped_column(ForeignKey("usage.id"))
     properties: Mapped[dict[str, Any] | None]
-    # ledger_entries: Mapped[list["Ledger"]] = relationship(back_populates="journal")
     created_at: Mapped[CREATED_AT]
 
 
@@ -99,7 +95,5 @@ class Ledger(Base):
     id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
     account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id"))
     journal_id: Mapped[BIGINT] = mapped_column(ForeignKey("journal.id"))
-    # account: Mapped["Account"] = relationship(back_populates="ledger_entries")
-    # journal: Mapped["Journal"] = relationship(back_populates="ledger_entries")
     amount: Mapped[Decimal]
     created_at: Mapped[CREATED_AT]
