@@ -1,18 +1,19 @@
 """Long jobs consumer module."""
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import LongJobStatus
-from app.db.models import Usage
+from app.db.models import Job
 from app.queue.consumer.base import QueueConsumer
-from app.queue.schemas import LongJobUsageEvent
-from app.repositories.usage import UsageRepository
+from app.queue.schemas import LongJobEvent
+from app.repositories.job import JobRepository
 
 
-async def _handle_started(repo: UsageRepository, event: LongJobUsageEvent) -> Usage:
-    return await repo.add_usage(
+async def _handle_started(repo: JobRepository, event: LongJobEvent) -> Job:
+    return await repo.insert_job(
         vlab_id=event.vlab_id,
         proj_id=event.proj_id,
         job_id=event.job_id,
@@ -24,7 +25,7 @@ async def _handle_started(repo: UsageRepository, event: LongJobUsageEvent) -> Us
     )
 
 
-async def _handle_running(repo: UsageRepository, event: LongJobUsageEvent) -> Usage:
+async def _handle_running(repo: JobRepository, event: LongJobEvent) -> Job:
     return await repo.update_last_alive_at(
         vlab_id=event.vlab_id,
         proj_id=event.proj_id,
@@ -33,7 +34,7 @@ async def _handle_running(repo: UsageRepository, event: LongJobUsageEvent) -> Us
     )
 
 
-async def _handle_finished(repo: UsageRepository, event: LongJobUsageEvent) -> Usage:
+async def _handle_finished(repo: JobRepository, event: LongJobEvent) -> Job:
     return await repo.update_finished_at(
         vlab_id=event.vlab_id,
         proj_id=event.proj_id,
@@ -45,19 +46,19 @@ async def _handle_finished(repo: UsageRepository, event: LongJobUsageEvent) -> U
 class LongJobsQueueConsumer(QueueConsumer):
     """Long jobs queue consumer."""
 
-    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> int:
+    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> UUID:
         """Consume the message."""
         self.logger.info("Message received: %s", msg)
-        event = LongJobUsageEvent.model_validate_json(msg["Body"])
-        repo = UsageRepository(db=db)
+        event = LongJobEvent.model_validate_json(msg["Body"])
+        repo = JobRepository(db=db)
         match event.status:
             case LongJobStatus.STARTED:
-                usage = await _handle_started(repo, event)
+                result = await _handle_started(repo, event)
             case LongJobStatus.RUNNING:
-                usage = await _handle_running(repo, event)
+                result = await _handle_running(repo, event)
             case LongJobStatus.FINISHED:
-                usage = await _handle_finished(repo, event)
+                result = await _handle_finished(repo, event)
             case _:
                 error = f"Status not handled: {event.status}"
                 raise ValueError(error)
-        return usage.id
+        return result.id

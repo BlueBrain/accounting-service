@@ -6,7 +6,7 @@ import pytest
 import sqlalchemy as sa
 
 from app.config import settings
-from app.db.models import Event, Usage
+from app.db.models import Event, Job
 from app.queue.consumer import storage as test_module
 
 pytestmark = pytest.mark.usefixtures("db_cleanup")
@@ -96,7 +96,7 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     assert len(records) == 1
     assert records[0].message_id == UUID(message_id)
 
-    query = sa.select(Usage)
+    query = sa.select(Job)
     records = (await db.scalars(query)).all()
     assert len(records) == 1
     assert records[0].service_type == "storage"

@@ -2,29 +2,30 @@
 
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import TransactionType
 from app.queue.consumer.base import QueueConsumer
-from app.queue.schemas import ShortJobUsageEvent
+from app.queue.schemas import ShortJobEvent
 from app.repositories.account import AccountRepository
+from app.repositories.job import JobRepository
 from app.repositories.ledger import LedgerRepository
-from app.repositories.usage import UsageRepository
 
 
 class ShortJobsQueueConsumer(QueueConsumer):
     """Short jobs queue consumer."""
 
-    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> int:
+    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> UUID:
         """Consume the message."""
         self.logger.info("Message received: %s", msg)
-        event = ShortJobUsageEvent.model_validate_json(msg["Body"])
-        usage_repo = UsageRepository(db=db)
+        event = ShortJobEvent.model_validate_json(msg["Body"])
+        job_repo = JobRepository(db=db)
         account_repo = AccountRepository(db=db)
         ledger_repo = LedgerRepository(db=db)
 
-        usage = await usage_repo.add_usage(
+        result = await job_repo.insert_job(
             vlab_id=event.vlab_id,
             proj_id=event.proj_id,
             job_id=event.job_id,
@@ -43,6 +44,6 @@ class ShortJobsQueueConsumer(QueueConsumer):
             credited_to=system_account.id,
             transaction_datetime=event.timestamp,
             transaction_type=TransactionType.CHARGE_SHORT_JOBS,
-            usage_id=usage.id,
+            job_id=result.id,
         )
-        return usage.id
+        return result.id

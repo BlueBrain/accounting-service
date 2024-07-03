@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, MutableMapping
 from contextlib import AbstractAsyncContextManager
 from typing import Any
+from uuid import UUID
 
 import botocore.exceptions
 from aiobotocore.client import AioBaseClient
@@ -60,7 +61,7 @@ class QueueConsumer(ABC):
         return self._queue_name
 
     @abstractmethod
-    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> int:
+    async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> UUID:
         """Consume the message."""
 
     async def _wrap(self, msg: dict[str, Any]) -> bool:
@@ -69,14 +70,14 @@ class QueueConsumer(ABC):
         The message is stored for future inspection.
         """
         async with database_session_manager.session() as db:
-            repo = EventRepository(db=db)
+            event_repo = EventRepository(db=db)
             try:
-                usage_id = await self._consume(msg=msg, db=db)
+                job_id = await self._consume(msg=msg, db=db)
             except Exception:
                 self.logger.exception("Error processing message")
                 # ensure that any pending change is rolled back
                 await db.rollback()
-                await repo.upsert(
+                await event_repo.upsert(
                     msg=msg,
                     queue_name=self._queue_name,
                     status=EventStatus.FAILED,
@@ -84,11 +85,11 @@ class QueueConsumer(ABC):
                 )
                 return False
             else:
-                await repo.upsert(
+                await event_repo.upsert(
                     msg=msg,
                     queue_name=self._queue_name,
                     status=EventStatus.COMPLETED,
-                    usage_id=usage_id,
+                    job_id=job_id,
                 )
                 return True
 

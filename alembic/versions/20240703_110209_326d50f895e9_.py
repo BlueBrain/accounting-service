@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 7f98613ff6b2
+Revision ID: 326d50f895e9
 Revises:
-Create Date: 2024-07-02 16:16:44.281798
+Create Date: 2024-07-03 11:02:09.473109
 
 """
 
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "7f98613ff6b2"
+revision: str = "326d50f895e9"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -66,11 +66,10 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_account_created_at"), "account", ["created_at"], unique=False)
     op.create_table(
-        "usage",
-        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        "job",
+        sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("vlab_id", sa.Uuid(), nullable=False),
         sa.Column("proj_id", sa.Uuid(), nullable=False),
-        sa.Column("job_id", sa.Uuid(), nullable=True),
         sa.Column(
             "service_type",
             postgresql.ENUM(
@@ -92,16 +91,17 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("last_alive_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("reserved_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("last_alive_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("properties", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_usage_created_at"), "usage", ["created_at"], unique=False)
-    op.create_index(op.f("ix_usage_job_id"), "usage", ["job_id"], unique=False)
-    op.create_index(op.f("ix_usage_proj_id"), "usage", ["proj_id"], unique=False)
-    op.create_index(op.f("ix_usage_vlab_id"), "usage", ["vlab_id"], unique=False)
+    op.create_index(op.f("ix_job_created_at"), "job", ["created_at"], unique=False)
+    op.create_index(op.f("ix_job_proj_id"), "job", ["proj_id"], unique=False)
+    op.create_index(op.f("ix_job_vlab_id"), "job", ["vlab_id"], unique=False)
     op.create_table(
         "event",
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
@@ -115,7 +115,7 @@ def upgrade() -> None:
         sa.Column("attributes", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("body", sa.String(), nullable=True),
         sa.Column("error", sa.String(), nullable=True),
-        sa.Column("usage_id", sa.BigInteger(), nullable=True),
+        sa.Column("job_id", sa.Uuid(), nullable=True),
         sa.Column("counter", sa.SmallInteger(), nullable=False),
         sa.Column(
             "created_at",
@@ -130,8 +130,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["usage_id"],
-            ["usage.id"],
+            ["job_id"],
+            ["job.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -140,7 +140,7 @@ def upgrade() -> None:
     op.create_table(
         "journal",
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
-        sa.Column("transaction_date", sa.Date(), nullable=False),
+        sa.Column("transaction_datetime", sa.DateTime(timezone=True), nullable=False),
         sa.Column(
             "transaction_type",
             postgresql.ENUM(
@@ -156,7 +156,7 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("usage_id", sa.BigInteger(), nullable=True),
+        sa.Column("job_id", sa.Uuid(), nullable=True),
         sa.Column("properties", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column(
             "created_at",
@@ -165,8 +165,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["usage_id"],
-            ["usage.id"],
+            ["job_id"],
+            ["job.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -206,11 +206,10 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_event_message_id"), table_name="event")
     op.drop_index(op.f("ix_event_created_at"), table_name="event")
     op.drop_table("event")
-    op.drop_index(op.f("ix_usage_vlab_id"), table_name="usage")
-    op.drop_index(op.f("ix_usage_proj_id"), table_name="usage")
-    op.drop_index(op.f("ix_usage_job_id"), table_name="usage")
-    op.drop_index(op.f("ix_usage_created_at"), table_name="usage")
-    op.drop_table("usage")
+    op.drop_index(op.f("ix_job_vlab_id"), table_name="job")
+    op.drop_index(op.f("ix_job_proj_id"), table_name="job")
+    op.drop_index(op.f("ix_job_created_at"), table_name="job")
+    op.drop_table("job")
     op.drop_index(op.f("ix_account_created_at"), table_name="account")
     op.drop_table("account")
     sa.Enum("COMPLETED", "FAILED", name="eventstatus").drop(op.get_bind())

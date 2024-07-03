@@ -1,4 +1,4 @@
-"""Usage Events schemas."""
+"""Queue schemas."""
 
 from datetime import UTC, datetime
 from typing import Annotated, Literal
@@ -21,8 +21,8 @@ def _convert_timestamp(value: Annotated[float, Field(gt=MIN_TS, lt=MAX_TS)]) -> 
 TimeStamp = Annotated[datetime, BeforeValidator(_convert_timestamp)]
 
 
-class StorageUsageEvent(BaseModel):
-    """StorageUsageEvent."""
+class StorageEvent(BaseModel):
+    """StorageEvent."""
 
     type: Literal[ServiceType.STORAGE]
     subtype: str | None = None
@@ -33,20 +33,20 @@ class StorageUsageEvent(BaseModel):
     timestamp: TimeStamp
 
 
-class ShortJobUsageEvent(BaseModel):
-    """ShortJobUsageEvent."""
+class ShortJobEvent(BaseModel):
+    """ShortJobEvent."""
 
     type: Literal[ServiceType.SHORT_JOBS]
     subtype: str
     vlab_id: UUID
     proj_id: UUID
-    job_id: UUID | None = None
+    job_id: UUID
     count: int
     timestamp: TimeStamp
 
 
-class LongJobUsageEvent(BaseModel):
-    """LongJobUsageEvent."""
+class LongJobEvent(BaseModel):
+    """LongJobEvent."""
 
     type: Literal[ServiceType.LONG_JOBS]
     subtype: str

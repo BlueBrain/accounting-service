@@ -24,7 +24,7 @@ class LedgerRepository(BaseRepository):
         credited_to: UUID,
         transaction_datetime: datetime,
         transaction_type: TransactionType,
-        usage_id: int | None,
+        job_id: UUID | None,
         properties: dict | None = None,
     ) -> None:
         """Insert a transaction into journal and ledger."""
@@ -33,7 +33,7 @@ class LedgerRepository(BaseRepository):
             .values(
                 transaction_datetime=transaction_datetime,
                 transaction_type=transaction_type,
-                usage_id=usage_id,
+                job_id=job_id,
                 properties=properties,
             )
             .returning(Journal.id)

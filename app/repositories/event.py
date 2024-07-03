@@ -1,6 +1,7 @@
 """Queue message repository module."""
 
 from typing import Any
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert
@@ -19,7 +20,7 @@ class EventRepository(BaseRepository):
         queue_name: str,
         status: EventStatus,
         error: str | None = None,
-        usage_id: int | None = None,
+        job_id: UUID | None = None,
     ) -> int | None:
         """Insert or update a record, and return a record counter >= 1."""
         query = insert(Event).values(
@@ -29,7 +30,7 @@ class EventRepository(BaseRepository):
             attributes=msg["Attributes"],
             body=msg["Body"],
             error=error,
-            usage_id=usage_id,
+            job_id=job_id,
             counter=1,
         )
         query = query.on_conflict_do_update(
@@ -40,7 +41,7 @@ class EventRepository(BaseRepository):
                 "attributes": msg["Attributes"],
                 "body": msg["Body"],
                 "error": error,
-                "usage_id": usage_id,
+                "job_id": job_id,
                 "counter": Event.counter + 1,
                 "updated_at": sa.func.now(),
             },
