@@ -3,7 +3,7 @@ import pytest
 from app.config import settings
 from app.queue.consumer import long_jobs as test_module
 
-pytestmark = pytest.mark.usefixtures("db_cleanup")
+pytestmark = pytest.mark.usefixtures("_db_cleanup")
 
 
 async def test_consume(sqs_client_factory):

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.queue.consumer.base import QueueConsumer
 from app.queue.schemas import StorageEvent
+from app.repositories.account import AccountRepository
 from app.repositories.job import JobRepository
 from app.utils import create_uuid
 
@@ -18,13 +19,20 @@ class StorageQueueConsumer(QueueConsumer):
         """Consume the message."""
         self.logger.info("Message received: %s", msg)
         event = StorageEvent.model_validate_json(msg["Body"])
-        repo = JobRepository(db=db)
-        result = await repo.insert_job(
-            job_id=event.job_id or create_uuid(),
-            vlab_id=event.vlab_id,
-            proj_id=event.proj_id,
+
+        job_repo = JobRepository(db=db)
+        account_repo = AccountRepository(db=db)
+        proj_account = await account_repo.get_proj_account(proj_id=event.proj_id)
+        proj_id = proj_account.id
+        vlab_id = proj_account.parent_id
+
+        result = await job_repo.insert_job(
+            job_id=create_uuid(),
+            vlab_id=vlab_id,
+            proj_id=proj_id,
             service_type=event.type,
             service_subtype=event.subtype,
+            reserved_units=event.size,
             units=event.size,
             started_at=event.timestamp,
         )

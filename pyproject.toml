@@ -54,6 +54,8 @@ ignore = [
     "N802",    # function name should be lowercase
     "RUF029",  # Function is declared `async`, but doesn't `await` or use `async` features.
     "S104",    # Possible binding to all interfaces
+    "FIX002",  # Line contains TODO, consider resolving the issue
+    "TD",      # TODOs
 ]
 
 [tool.ruff.lint.isort]
@@ -82,7 +84,7 @@ convention = "google"
 
 [tool.ruff.lint.pylint]
 # Maximum number of arguments for function / method
-max-args = 10
+max-args = 12
 # Maximum number of locals for function / method body
 max-locals = 15
 # Maximum number of return / yield for function / method body

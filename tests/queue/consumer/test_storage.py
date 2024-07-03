@@ -9,7 +9,9 @@ from app.config import settings
 from app.db.models import Event, Job
 from app.queue.consumer import storage as test_module
 
-pytestmark = pytest.mark.usefixtures("db_cleanup")
+from tests.constants import PROJ_ID, VLAB_ID
+
+pytestmark = pytest.mark.usefixtures("_db_cleanup")
 
 
 def _get_queue_url_response(queue_url):
@@ -51,7 +53,7 @@ def _prepare_stub(stub, queue_url, message_id, receipt_handle, message_body):
                 "SentTimestamp",
                 "SequenceNumber",
             ],
-            "MaxNumberOfMessages": 5,
+            "MaxNumberOfMessages": 1,
             "VisibilityTimeout": 30,
             "WaitTimeSeconds": 20,
         },
@@ -66,6 +68,7 @@ def _prepare_stub(stub, queue_url, message_id, receipt_handle, message_body):
     )
 
 
+@pytest.mark.usefixtures("_db_account")
 async def test_consume(sqs_stubber, sqs_client_factory, db):
     queue_name = settings.SQS_STORAGE_QUEUE_NAME
     queue_url = "http://queue:9324/000000000000/storage.fifo"
@@ -73,8 +76,7 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     receipt_handle = "3e7a742a-3450-4ca2-a2ee-b044a525d16f#b0880329-82c2-4f39-92e3-d0d3d70e7dbf"
     message_body = {
         "type": "storage",
-        "vlab_id": "00000000-0000-0000-0000-000000000000",
-        "proj_id": "00000000-0000-0000-0000-000000000001",
+        "proj_id": PROJ_ID,
         "size": "1073741824",
         "timestamp": "1719477803993",
     }
@@ -100,7 +102,7 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     records = (await db.scalars(query)).all()
     assert len(records) == 1
     assert records[0].service_type == "storage"
-    assert records[0].vlab_id == UUID("00000000-0000-0000-0000-000000000000")
-    assert records[0].proj_id == UUID("00000000-0000-0000-0000-000000000001")
+    assert records[0].vlab_id == UUID(VLAB_ID)
+    assert records[0].proj_id == UUID(PROJ_ID)
     assert records[0].units == 1073741824
     assert records[0].started_at == datetime.fromtimestamp(1719477803.993, tz=UTC)

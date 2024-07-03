@@ -1,8 +1,11 @@
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from unittest.mock import patch
+from uuid import UUID
 
 import pytest
+import sqlalchemy as sa
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession, get_session
 from botocore.stub import Stubber
@@ -11,8 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application import app
 from app.config import settings
+from app.db.models import Account
 from app.db.session import database_session_manager
 
+from tests.constants import PROJ_ID, RSV_ID, SYS_ID, VLAB_ID
 from tests.utils import truncate_tables
 
 
@@ -40,8 +45,9 @@ async def db() -> AsyncIterator[AsyncSession]:
 
 
 @pytest.fixture()
-async def db_cleanup(db):
-    yield db
+async def _db_cleanup(db):
+    yield
+    await db.rollback()
     await truncate_tables(db)
 
 
@@ -86,3 +92,57 @@ async def sqs_stubber(sqs_client) -> AsyncIterator[Stubber]:
     """Return a new stubber for each test."""
     with Stubber(sqs_client) as stubber:
         yield stubber
+
+
+@pytest.fixture()
+async def _db_account(db):
+    """Populate the account table."""
+    await db.execute(
+        sa.insert(Account).values(
+            [
+                {
+                    "id": SYS_ID,
+                    "account_type": "SYS",
+                    "parent_id": None,
+                    "name": "OBP",
+                    "balance": -1000,
+                },
+                {
+                    "id": VLAB_ID,
+                    "account_type": "VLAB",
+                    "parent_id": None,
+                    "name": "Test virtual lab",
+                    "balance": 500,
+                },
+                {
+                    "id": PROJ_ID,
+                    "account_type": "PROJ",
+                    "parent_id": VLAB_ID,
+                    "name": "Test project",
+                    "balance": 400,
+                },
+                {
+                    "id": RSV_ID,
+                    "account_type": "RSV",
+                    "parent_id": PROJ_ID,
+                    "name": "Test reservation",
+                    "balance": 100,
+                },
+            ],
+        )
+    )
+    # commit b/c the test might be using a new transaction, for example when calling an endpoint
+    await db.commit()
+
+
+@pytest.fixture()
+def mock_uuid():
+    i = 0
+
+    def _fake_uuid():
+        nonlocal i
+        i += 1
+        return UUID(f"{i:032x}")
+
+    with patch("uuid.uuid4", side_effect=_fake_uuid, autospec=True) as m:
+        yield m

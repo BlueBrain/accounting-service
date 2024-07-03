@@ -26,9 +26,7 @@ class StorageEvent(BaseModel):
 
     type: Literal[ServiceType.STORAGE]
     subtype: str | None = None
-    vlab_id: UUID
     proj_id: UUID
-    job_id: UUID | None = None
     size: int
     timestamp: TimeStamp
 
@@ -38,7 +36,6 @@ class ShortJobEvent(BaseModel):
 
     type: Literal[ServiceType.SHORT_JOBS]
     subtype: str
-    vlab_id: UUID
     proj_id: UUID
     job_id: UUID
     count: int
@@ -50,7 +47,6 @@ class LongJobEvent(BaseModel):
 
     type: Literal[ServiceType.LONG_JOBS]
     subtype: str
-    vlab_id: UUID
     proj_id: UUID
     job_id: UUID
     status: LongJobStatus

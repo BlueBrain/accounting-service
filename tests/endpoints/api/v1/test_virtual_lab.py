@@ -1,6 +1,6 @@
 import pytest
 
-pytestmark = pytest.mark.usefixtures("db_cleanup")
+pytestmark = pytest.mark.usefixtures("_db_cleanup")
 
 
 async def test_get_virtual_lab(api_client):

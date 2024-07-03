@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any, ClassVar
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Identity, SmallInteger
+from sqlalchemy import DateTime, ForeignKey, Identity, SmallInteger, text, true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -50,12 +50,14 @@ class Job(Base):
     proj_id: Mapped[UUID] = mapped_column(index=True)
     service_type: Mapped[ServiceType]
     service_subtype: Mapped[str | None]
-    units: Mapped[BIGINT]
+    reserved_units: Mapped[BIGINT] = mapped_column(server_default=text("0"))
+    units: Mapped[BIGINT] = mapped_column(server_default=text("0"))
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
     reserved_at: Mapped[datetime | None]
     started_at: Mapped[datetime | None]
     last_alive_at: Mapped[datetime | None]
+    last_charged_at: Mapped[datetime | None]
     finished_at: Mapped[datetime | None]
     cancelled_at: Mapped[datetime | None]
     properties: Mapped[dict[str, Any] | None]
@@ -70,7 +72,8 @@ class Account(Base):
     account_type: Mapped[AccountType]
     parent_id: Mapped[UUID | None] = mapped_column(ForeignKey("account.id"))
     name: Mapped[str]
-    enabled: Mapped[bool]
+    balance: Mapped[Decimal] = mapped_column(server_default=text("0"))
+    enabled: Mapped[bool] = mapped_column(server_default=true())
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
 

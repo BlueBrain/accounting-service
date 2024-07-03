@@ -7,7 +7,7 @@ from uuid import UUID
 import sqlalchemy as sa
 
 from app.constants import TransactionType
-from app.db.models import Journal, Ledger
+from app.db.models import Account, Journal, Ledger
 from app.logger import get_logger
 from app.repositories.base import BaseRepository
 
@@ -27,7 +27,7 @@ class LedgerRepository(BaseRepository):
         job_id: UUID | None,
         properties: dict | None = None,
     ) -> None:
-        """Insert a transaction into journal and ledger."""
+        """Insert a transaction into journal and ledger, and update the balance accordingly."""
         query = (
             sa.insert(Journal)
             .values(
@@ -54,3 +54,19 @@ class LedgerRepository(BaseRepository):
                 },
             ],
         )
+        (
+            await self.db.execute(
+                sa.update(Account)
+                .values(balance=Account.balance + amount)
+                .where(Account.id == credited_to)
+                .returning(Account.balance)
+            )
+        ).one()
+        (
+            await self.db.execute(
+                sa.update(Account)
+                .values(balance=Account.balance - amount)
+                .where(Account.id == debited_from)
+                .returning(Account.balance)
+            )
+        ).one()

@@ -94,7 +94,16 @@ class QueueConsumer(ABC):
                 return True
 
     async def _run_once(self, sqs_client: AioBaseClient, queue_url: str) -> None:
-        """Receive and process a single batch of messages."""
+        """Receive and process a single batch of messages.
+
+        FIFO queue logic applies only per message group ID.
+
+        When you receive a message with a message group ID, no more messages for the same message
+        group ID are returned unless you delete the message, or it becomes visible.
+
+        See Also:
+            https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues-understanding-logic.html
+        """
         response = await sqs_client.receive_message(
             QueueUrl=queue_url,
             MessageSystemAttributeNames=[
@@ -103,7 +112,7 @@ class QueueConsumer(ABC):
                 "SentTimestamp",
                 "SequenceNumber",
             ],
-            MaxNumberOfMessages=5,
+            MaxNumberOfMessages=1,
             VisibilityTimeout=30,
             WaitTimeSeconds=20,  # enable long polling
         )

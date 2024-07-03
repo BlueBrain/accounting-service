@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 326d50f895e9
+Revision ID: ce4a1945bb55
 Revises:
-Create Date: 2024-07-03 11:02:09.473109
+Create Date: 2024-07-08 09:26:47.252860
 
 """
 
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "326d50f895e9"
+revision: str = "ce4a1945bb55"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -45,7 +45,8 @@ def upgrade() -> None:
         ),
         sa.Column("parent_id", sa.Uuid(), nullable=True),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("enabled", sa.Boolean(), nullable=False),
+        sa.Column("balance", sa.Numeric(), server_default=sa.text("0"), nullable=False),
+        sa.Column("enabled", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -78,7 +79,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("service_subtype", sa.String(), nullable=True),
-        sa.Column("units", sa.BigInteger(), nullable=False),
+        sa.Column("reserved_units", sa.BigInteger(), server_default=sa.text("0"), nullable=False),
+        sa.Column("units", sa.BigInteger(), server_default=sa.text("0"), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -94,6 +96,7 @@ def upgrade() -> None:
         sa.Column("reserved_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("last_alive_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("last_charged_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("properties", postgresql.JSONB(astext_type=sa.Text()), nullable=True),

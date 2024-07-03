@@ -7,7 +7,7 @@ from app.constants import ServiceType
 from app.db.models import Job
 from app.repositories import job as test_module
 
-pytestmark = pytest.mark.usefixtures("db_cleanup")
+pytestmark = pytest.mark.usefixtures("_db_cleanup")
 
 
 async def test_insert_job(db):
@@ -19,7 +19,7 @@ async def test_insert_job(db):
         proj_id=UUID("759bb837-4fac-46e8-9ea4-ed98c68c0fb9"),
         service_type=ServiceType.STORAGE,
         service_subtype="",
-        units=1234,
+        reserved_units=1234,
         started_at=started_at,
         finished_at=None,
         properties=None,

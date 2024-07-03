@@ -4,7 +4,7 @@ from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects import postgresql as pg
 
 from app.constants import EventStatus
 from app.db.models import Event
@@ -23,7 +23,7 @@ class EventRepository(BaseRepository):
         job_id: UUID | None = None,
     ) -> int | None:
         """Insert or update a record, and return a record counter >= 1."""
-        query = insert(Event).values(
+        query = pg.insert(Event).values(
             message_id=msg["MessageId"],
             queue_name=queue_name,
             status=status,
