@@ -1,4 +1,4 @@
-"""Endpoint schemas."""
+"""Api schemas."""
 
 from decimal import Decimal
 from typing import Literal

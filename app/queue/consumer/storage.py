@@ -6,9 +6,9 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.queue.consumer.base import QueueConsumer
-from app.queue.schemas import StorageEvent
 from app.repositories.account import AccountRepository
 from app.repositories.job import JobRepository
+from app.schemas.queue import StorageEvent
 from app.utils import create_uuid
 
 
@@ -22,14 +22,11 @@ class StorageQueueConsumer(QueueConsumer):
 
         job_repo = JobRepository(db=db)
         account_repo = AccountRepository(db=db)
-        proj_account = await account_repo.get_proj_account(proj_id=event.proj_id)
-        proj_id = proj_account.id
-        vlab_id = proj_account.parent_id
-
+        accounts = await account_repo.get_accounts_by_proj_id(proj_id=event.proj_id)
         result = await job_repo.insert_job(
             job_id=create_uuid(),
-            vlab_id=vlab_id,
-            proj_id=proj_id,
+            vlab_id=accounts.vlab.id,
+            proj_id=accounts.proj.id,
             service_type=event.type,
             service_subtype=event.subtype,
             reserved_units=event.size,

@@ -38,7 +38,7 @@ class JobRepository(BaseRepository):
         )
         return (await self.db.execute(query)).scalar_one()
 
-    async def update_job(self, job_id: UUID, vlab_id: UUID | None, proj_id: UUID, **kwargs) -> Job:
+    async def update_job(self, job_id: UUID, vlab_id: UUID, proj_id: UUID, **kwargs) -> Job:
         """Update an existing record."""
         query = (
             sa.update(Job)

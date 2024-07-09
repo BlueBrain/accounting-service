@@ -7,14 +7,14 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.constants import TransactionType
+from app.constants import AccountType, TransactionType
 from app.db.models import Job
 from app.errors import EventError
 from app.queue.consumer.base import QueueConsumer
-from app.queue.schemas import ShortJobEvent
 from app.repositories.account import AccountRepository
 from app.repositories.job import JobRepository
 from app.repositories.ledger import LedgerRepository
+from app.schemas.queue import ShortJobEvent
 
 
 class ShortJobsQueueConsumer(QueueConsumer):
@@ -29,16 +29,9 @@ class ShortJobsQueueConsumer(QueueConsumer):
         ledger_repo = LedgerRepository(db=db)
 
         system_account = await account_repo.get_system_account()
-        proj_account = await account_repo.get_proj_account(
-            proj_id=event.proj_id,
-            for_update=True,
+        accounts = await account_repo.get_accounts_by_proj_id(
+            proj_id=event.proj_id, for_update={AccountType.PROJ, AccountType.RSV}
         )
-        rsv_account = await account_repo.get_reservation_account(
-            proj_id=event.proj_id,
-            for_update=True,
-        )
-        vlab_id = proj_account.parent_id
-        proj_id = proj_account.id
 
         job = await job_repo.get_job(job_id=event.job_id)
         if job is None:
@@ -49,8 +42,8 @@ class ShortJobsQueueConsumer(QueueConsumer):
             raise EventError(err)
         if any(
             (
-                job.vlab_id != vlab_id,
-                job.proj_id != proj_id,
+                job.vlab_id != accounts.vlab.id,
+                job.proj_id != accounts.proj.id,
                 job.service_type != event.type,
                 job.service_subtype != event.subtype,
                 job.reserved_units != event.count,
@@ -61,8 +54,8 @@ class ShortJobsQueueConsumer(QueueConsumer):
 
         result = await job_repo.update_job(
             job_id=event.job_id,
-            vlab_id=vlab_id,
-            proj_id=proj_id,
+            vlab_id=accounts.vlab.id,
+            proj_id=accounts.proj.id,
             started_at=func.coalesce(Job.started_at, event.timestamp),
             last_alive_at=func.greatest(Job.last_alive_at, event.timestamp),
         )
@@ -71,7 +64,7 @@ class ShortJobsQueueConsumer(QueueConsumer):
         # TODO: use proj_account if the reservation account doesn't have enough funds
         await ledger_repo.insert_transaction(
             amount=price,
-            debited_from=rsv_account.id,
+            debited_from=accounts.rsv.id,
             credited_to=system_account.id,
             transaction_datetime=event.timestamp,
             transaction_type=TransactionType.CHARGE_SHORT_JOBS,

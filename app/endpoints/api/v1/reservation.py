@@ -1,9 +1,13 @@
-"""Job endpoints."""
+"""Reservation endpoints."""
 
 from fastapi import APIRouter
 
 from app.dependencies import AccountRepoDep, JobRepoDep, LedgerRepoDep
-from app.schemas import LongJobsReservationRequest, ReservationResponse, ShortJobsReservationRequest
+from app.schemas.api import (
+    LongJobsReservationRequest,
+    ReservationResponse,
+    ShortJobsReservationRequest,
+)
 from app.services import reservation
 
 router = APIRouter()

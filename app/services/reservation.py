@@ -1,11 +1,11 @@
 """Reservation service."""
 
-from app.constants import TransactionType
+from app.constants import AccountType, TransactionType
 from app.logger import get_logger
 from app.repositories.account import AccountRepository
 from app.repositories.job import JobRepository
 from app.repositories.ledger import LedgerRepository
-from app.schemas import (
+from app.schemas.api import (
     LongJobsReservationRequest,
     ReservationRequest,
     ReservationResponse,
@@ -25,18 +25,13 @@ async def _make_reservation(
     ledger_repo: LedgerRepository,
 ) -> ReservationResponse:
     """Make the job reservation."""
-    # lock the project row against concurrent updates
-    proj_account = await account_repo.get_proj_account(
-        proj_id=reservation_request.proj_id, for_update=True
+    # retrieve the accounts while locking the project account against concurrent updates
+    accounts = await account_repo.get_accounts_by_proj_id(
+        proj_id=reservation_request.proj_id, for_update={AccountType.PROJ}
     )
-    reservation_account = await account_repo.get_reservation_account(
-        proj_id=reservation_request.proj_id
-    )
-    proj_id = proj_account.id
-    vlab_id = proj_account.parent_id
-    available_amount = proj_account.balance
+    available_amount = accounts.proj.balance
     requested_amount = await get_price(
-        vlab_id=vlab_id,
+        vlab_id=accounts.vlab.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,
         units=reserved_units,
@@ -44,7 +39,7 @@ async def _make_reservation(
     if requested_amount > available_amount:
         L.info(
             "Reservation not allowed for project %s: requested=%s, available=%s",
-            reservation_account.id,
+            accounts.proj.id,
             requested_amount,
             available_amount,
         )
@@ -57,8 +52,8 @@ async def _make_reservation(
     now = utcnow()
     await job_repo.insert_job(
         job_id=job_id,
-        vlab_id=vlab_id,
-        proj_id=proj_id,
+        vlab_id=accounts.vlab.id,
+        proj_id=accounts.proj.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,
         reserved_units=reserved_units,
@@ -67,8 +62,8 @@ async def _make_reservation(
     )
     await ledger_repo.insert_transaction(
         amount=requested_amount,
-        debited_from=proj_account.id,
-        credited_to=reservation_account.id,
+        debited_from=accounts.proj.id,
+        credited_to=accounts.rsv.id,
         transaction_datetime=now,
         transaction_type=TransactionType.RESERVE,
         job_id=job_id,
@@ -76,7 +71,7 @@ async def _make_reservation(
     )
     L.info(
         "Reservation allowed for project %s: requested=%s, available=%s, job_id=%s",
-        reservation_account.id,
+        accounts.proj.id,
         requested_amount,
         available_amount,
         job_id,
