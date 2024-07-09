@@ -3,7 +3,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter
-from pydantic import UUID4
 
 router = APIRouter()
 
