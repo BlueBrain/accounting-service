@@ -44,7 +44,7 @@ async def db() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 async def _db_cleanup(db):
     yield
     await db.rollback()

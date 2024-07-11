@@ -4,8 +4,6 @@ from app.constants import ServiceType
 
 from tests.constants import PROJ_ID
 
-pytestmark = pytest.mark.usefixtures("_db_cleanup")
-
 
 @pytest.mark.usefixtures("_db_account")
 async def test_make_short_jobs_reservation(api_client, mock_uuid):

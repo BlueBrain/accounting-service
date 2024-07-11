@@ -12,6 +12,7 @@ from app.logger import configure_logging
 from app.queue.consumer.long_jobs import LongJobsQueueConsumer
 from app.queue.consumer.short_jobs import ShortJobsQueueConsumer
 from app.queue.consumer.storage import StorageQueueConsumer
+from app.tasks.charger.storage import PeriodicStorageCharger
 
 
 async def main() -> None:
@@ -44,11 +45,13 @@ async def main() -> None:
         queue_name=settings.SQS_LONG_JOBS_QUEUE_NAME,
         initial_delay=3,
     )
+    storage_charger = PeriodicStorageCharger(initial_delay=4)
     try:
         async with asyncio.TaskGroup() as tg:
-            tg.create_task(storage_queue_consumer.run_forever(), name="storage")
-            tg.create_task(short_jobs_queue_consumer.run_forever(), name="short-jobs")
-            tg.create_task(long_jobs_queue_consumer.run_forever(), name="long-jobs")
+            tg.create_task(storage_queue_consumer.run_forever(), name="storage-consumer")
+            tg.create_task(short_jobs_queue_consumer.run_forever(), name="short-jobs-consumer")
+            tg.create_task(long_jobs_queue_consumer.run_forever(), name="long-jobs-consumer")
+            tg.create_task(storage_charger.run_forever(), name="storage-charger")
             tg.create_task(server.serve(), name="uvicorn")
     finally:
         await database_session_manager.close()

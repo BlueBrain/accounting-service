@@ -1,12 +1,14 @@
 """Job message repository module."""
 
 from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import and_
+from sqlalchemy import Row, and_, null, true
 from sqlalchemy.dialects import postgresql as pg
 
+from app.constants import ServiceType
 from app.db.models import Job
 from app.logger import get_logger
 from app.repositories.base import BaseRepository
@@ -65,3 +67,46 @@ class JobRepository(BaseRepository):
         query = sa.select(Job)
         res = await self.db.scalars(query)
         return res.all()
+
+    async def get_last_charged_storage_jobs(
+        self,
+        *,
+        project_ids: list[UUID] | None = None,
+        min_charged_at: datetime | None = None,
+    ) -> dict[UUID, Row]:
+        """Get the job of type storage that was last charged, for each project."""
+        query = (
+            sa.select(Job.proj_id, Job.last_charged_at, Job.started_at, Job.id, Job.units)
+            .distinct(Job.proj_id)
+            .where(
+                Job.service_type == ServiceType.STORAGE,
+                Job.last_charged_at != null(),
+                Job.started_at != null(),
+                Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+                (Job.last_charged_at >= min_charged_at) if min_charged_at else true(),
+            )
+            .order_by(Job.proj_id, Job.last_charged_at.desc())
+        )
+        rows = (await self.db.execute(query)).all()
+        return {row.proj_id: row for row in rows}
+
+    async def get_not_charged_storage_jobs(
+        self, *, project_ids: list[UUID] | None = None
+    ) -> dict[UUID, Row]:
+        """Get the job of type storage not charged yet, for each project.
+
+        If there are multiple not-charged jobs per project, return the oldest one.
+        """
+        query = (
+            sa.select(Job.proj_id, Job.started_at, Job.id, Job.units)
+            .distinct(Job.proj_id)
+            .where(
+                Job.service_type == ServiceType.STORAGE,
+                Job.last_charged_at == null(),
+                Job.started_at != null(),
+                Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+            )
+            .order_by(Job.proj_id, Job.started_at)
+        )
+        rows = (await self.db.execute(query)).all()
+        return {row.proj_id: row for row in rows}

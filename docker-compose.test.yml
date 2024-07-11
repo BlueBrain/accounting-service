@@ -38,3 +38,9 @@ services:
       start_period: 5s
       start_interval: 1s
     restart: "no"
+    command:  # see https://www.postgresql.org/docs/current/non-durability.html
+    - postgres
+    - -cfsync=off
+    - -csynchronous_commit=off
+    - -cfull_page_writes=off
+    # - -clog_statement=all

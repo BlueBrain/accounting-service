@@ -1,13 +1,9 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-import pytest
-
 from app.constants import ServiceType
 from app.db.models import Job
 from app.repositories import job as test_module
-
-pytestmark = pytest.mark.usefixtures("_db_cleanup")
 
 
 async def test_insert_job(db):

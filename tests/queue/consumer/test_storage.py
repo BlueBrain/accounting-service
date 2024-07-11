@@ -11,8 +11,6 @@ from app.queue.consumer import storage as test_module
 
 from tests.constants import PROJ_ID, VLAB_ID
 
-pytestmark = pytest.mark.usefixtures("_db_cleanup")
-
 
 def _get_queue_url_response(queue_url):
     return {"QueueUrl": queue_url}

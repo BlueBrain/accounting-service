@@ -28,6 +28,8 @@ class LedgerRepository(BaseRepository):
         properties: dict | None = None,
     ) -> None:
         """Insert a transaction into journal and ledger, and update the balance accordingly."""
+        if amount <= 0:
+            L.warning("Negative transaction amount: %s", amount)
         query = (
             sa.insert(Journal)
             .values(
