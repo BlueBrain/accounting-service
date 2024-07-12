@@ -11,7 +11,7 @@ from app.schemas.api import (
     ReservationResponse,
     ShortJobsReservationRequest,
 )
-from app.services.price import get_price
+from app.services.price import calculate_running_cost
 from app.utils import create_uuid, utcnow
 
 L = get_logger(__name__)
@@ -30,7 +30,7 @@ async def _make_reservation(
         proj_id=reservation_request.proj_id, for_update={AccountType.PROJ}
     )
     available_amount = accounts.proj.balance
-    requested_amount = await get_price(
+    requested_amount = await calculate_running_cost(
         vlab_id=accounts.vlab.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,

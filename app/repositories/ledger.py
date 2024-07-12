@@ -5,8 +5,9 @@ from decimal import Decimal
 from uuid import UUID
 
 import sqlalchemy as sa
+from sqlalchemy import func, true
 
-from app.constants import TransactionType
+from app.constants import AccountType, TransactionType
 from app.db.models import Account, Journal, Ledger
 from app.logger import get_logger
 from app.repositories.base import BaseRepository
@@ -72,3 +73,22 @@ class LedgerRepository(BaseRepository):
                 .returning(Account.balance)
             )
         ).one()
+
+    async def get_remaining_reservation_for_job(
+        self, job_id: UUID, account_id: UUID | None = None
+    ) -> Decimal:
+        """Return the remaining reservation amount for a specific job."""
+        query = (
+            sa.select(
+                func.sum(Ledger.amount).label("total"),
+            )
+            .select_from(Journal)
+            .join(Ledger)
+            .join(Account)
+            .where(
+                Journal.job_id == job_id,
+                Account.account_type == AccountType.RSV,
+                (Ledger.account_id == account_id) if account_id else true(),
+            )
+        )
+        return (await self.db.execute(query)).scalar_one() or Decimal(0)

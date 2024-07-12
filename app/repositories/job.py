@@ -5,7 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Row, and_, null, true
+from sqlalchemy import Row, null, or_, true
 from sqlalchemy.dialects import postgresql as pg
 
 from app.constants import ServiceType
@@ -44,13 +44,11 @@ class JobRepository(BaseRepository):
         """Update an existing record."""
         query = (
             sa.update(Job)
-            .values(id=job_id, **kwargs)
+            .values(**kwargs)
             .where(
-                and_(
-                    Job.id == job_id,
-                    Job.vlab_id == vlab_id,
-                    Job.proj_id == proj_id,
-                )
+                Job.id == job_id,
+                Job.vlab_id == vlab_id,
+                Job.proj_id == proj_id,
             )
             .returning(Job)
         )
@@ -68,7 +66,7 @@ class JobRepository(BaseRepository):
         res = await self.db.scalars(query)
         return res.all()
 
-    async def get_last_charged_storage_jobs(
+    async def get_storage_jobs_last_charged(
         self,
         *,
         project_ids: list[UUID] | None = None,
@@ -90,7 +88,7 @@ class JobRepository(BaseRepository):
         rows = (await self.db.execute(query)).all()
         return {row.proj_id: row for row in rows}
 
-    async def get_not_charged_storage_jobs(
+    async def get_storage_jobs_not_charged(
         self, *, project_ids: list[UUID] | None = None
     ) -> dict[UUID, Row]:
         """Get the job of type storage not charged yet, for each project.
@@ -110,3 +108,26 @@ class JobRepository(BaseRepository):
         )
         rows = (await self.db.execute(query)).all()
         return {row.proj_id: row for row in rows}
+
+    async def get_long_jobs_to_be_charged(
+        self, *, project_ids: list[UUID] | None = None
+    ) -> Sequence[Job]:
+        """Get the long jobs to be charged.
+
+        Return the jobs started having last_charged_at != finished_at,
+        or where last_charged_at and/or finished_at are null.
+
+        The records are NOT locked for update: if the consumer task updates the field `finished_at`
+        during the transaction, the records will be selected again in the next round.
+        """
+        query = sa.select(Job).where(
+            Job.service_type == ServiceType.LONG_JOBS,
+            Job.started_at != null(),
+            or_(
+                Job.last_charged_at != Job.finished_at,
+                Job.last_charged_at == null(),
+                Job.finished_at == null(),
+            ),
+            Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+        )
+        return (await self.db.execute(query)).scalars().all()

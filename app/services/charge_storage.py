@@ -8,6 +8,7 @@ from sqlalchemy import Row
 from app.constants import TransactionType
 from app.logger import get_logger
 from app.repositories.group import RepositoryGroup
+from app.schemas.domain import ChargeStorageResult
 from app.utils import utcnow
 
 L = get_logger(__name__)
@@ -68,7 +69,7 @@ async def _charge_running_storage_jobs(
         total_seconds = (now - job.last_charged_at).total_seconds()
         if total_seconds < min_charging_interval:
             L.debug(
-                "Ignoring charge for project %s: elapsed seconds since last charge: %.2f",
+                "Ignoring charge for project %s: elapsed seconds since last charge: %.3f",
                 proj_id,
                 total_seconds,
             )
@@ -178,7 +179,7 @@ async def charge_storage_jobs(
     repos: RepositoryGroup,
     min_charging_interval: float = 0,
     min_charging_amount: Decimal = Decimal(0),
-) -> dict[str, int]:
+) -> ChargeStorageResult:
     """Charge for the storage.
 
     Args:
@@ -206,8 +207,8 @@ async def charge_storage_jobs(
           - update J1.last_charged_at
           - update J2.last_charged_at
     """
-    not_charged = await repos.job.get_not_charged_storage_jobs()  # J2
-    last_charged = await repos.job.get_last_charged_storage_jobs()  # J1
+    not_charged = await repos.job.get_storage_jobs_not_charged()  # J2
+    last_charged = await repos.job.get_storage_jobs_last_charged()  # J1
     new_ids = not_charged.keys() - last_charged.keys()  # in J2 but not in J1
     running_ids = last_charged.keys() - not_charged.keys()  # in J1 but not in J2
     transitioning_ids = last_charged.keys() & not_charged.keys()  # in both J2 and J1
@@ -229,10 +230,10 @@ async def charge_storage_jobs(
         not_charged=not_charged,
         last_charged=last_charged,
     )
-    return {
-        "not_charged": len(not_charged),
-        "last_charged": len(last_charged),
-        "new_ids": len(new_ids),
-        "running_ids": len(running_ids),
-        "transitioning_ids": len(transitioning_ids),
-    }
+    return ChargeStorageResult(
+        not_charged=len(not_charged),
+        last_charged=len(last_charged),
+        new_ids=len(new_ids),
+        running_ids=len(running_ids),
+        transitioning_ids=len(transitioning_ids),
+    )

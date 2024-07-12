@@ -45,3 +45,4 @@ class TransactionType(StrEnum):
     CHARGE_SHORT_JOBS = auto()  # from RSV to SYS, or from PROJ to SYS
     CHARGE_LONG_JOBS = auto()  # from RSV to SYS, or from PROJ to SYS
     CHARGE_STORAGE = auto()  # from RSV to SYS, or from PROJ to SYS
+    REFUND = auto()  # from SYS to PROJ

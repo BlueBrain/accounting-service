@@ -26,10 +26,15 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["*"]
     LOGGING_CONFIG: str = "app/data/logging.yaml"
 
-    CHARGE_STORAGE_LOOP_SLEEP: float = 60  # number of seconds between executions
-    CHARGE_STORAGE_ERROR_SLEEP: float = 60  # number of seconds between executions in case of error
-    CHARGE_STORAGE_MIN_CHARGING_INTERVAL: float = 3600  # minimum number of seconds between charges
-    CHARGE_STORAGE_MIN_CHARGING_AMOUNT: Decimal = Decimal("0.000001")  # min amount per transaction
+    CHARGE_STORAGE_LOOP_SLEEP: float = 60
+    CHARGE_STORAGE_ERROR_SLEEP: float = 60
+    CHARGE_STORAGE_MIN_CHARGING_INTERVAL: float = 3600
+    CHARGE_STORAGE_MIN_CHARGING_AMOUNT: Decimal = Decimal("0.000001")
+
+    CHARGE_LONG_JOBS_LOOP_SLEEP: float = 60
+    CHARGE_LONG_JOBS_ERROR_SLEEP: float = 60
+    CHARGE_LONG_JOBS_MIN_CHARGING_INTERVAL: float = 10
+    CHARGE_LONG_JOBS_MIN_CHARGING_AMOUNT: Decimal = Decimal("0.000001")
 
     SQS_STORAGE_QUEUE_NAME: str = "storage.fifo"
     SQS_SHORT_JOBS_QUEUE_NAME: str = "short-jobs.fifo"
