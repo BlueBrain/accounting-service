@@ -15,12 +15,10 @@ from app.schemas.queue import LongJobEvent
 
 
 async def _handle_started(job_repo: JobRepository, event: LongJobEvent, accounts: Accounts) -> Job:
-    units = (event.instances or 1) * 10  # TODO: calculate the correct units
     return await job_repo.update_job(
         job_id=event.job_id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
-        units=units,
         started_at=event.timestamp,
         properties={"instance_type": event.instance_type},
     )

@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     CHARGE_LONG_JOBS_MIN_CHARGING_INTERVAL: float = 10
     CHARGE_LONG_JOBS_MIN_CHARGING_AMOUNT: Decimal = Decimal("0.000001")
 
+    CHARGE_SHORT_JOBS_LOOP_SLEEP: float = 60
+    CHARGE_SHORT_JOBS_ERROR_SLEEP: float = 60
+
     SQS_STORAGE_QUEUE_NAME: str = "storage.fifo"
     SQS_SHORT_JOBS_QUEUE_NAME: str = "short-jobs.fifo"
     SQS_LONG_JOBS_QUEUE_NAME: str = "long-jobs.fifo"

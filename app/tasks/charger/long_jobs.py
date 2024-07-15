@@ -10,9 +10,10 @@ from app.tasks.charger.base import BaseTask
 class PeriodicLongJobsCharger(BaseTask):
     """PeriodicLongJobsCharger."""
 
-    def __init__(self, initial_delay: int = 0) -> None:
+    def __init__(self, name: str, initial_delay: int = 0) -> None:
         """Init the task."""
         super().__init__(
+            name=name,
             initial_delay=initial_delay,
             loop_sleep=settings.CHARGE_LONG_JOBS_LOOP_SLEEP,
             error_sleep=settings.CHARGE_LONG_JOBS_ERROR_SLEEP,

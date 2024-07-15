@@ -131,3 +131,16 @@ class JobRepository(BaseRepository):
             Job.proj_id.in_(project_ids) if project_ids is not None else true(),
         )
         return (await self.db.execute(query)).scalars().all()
+
+    async def get_short_jobs_to_be_charged(
+        self, *, project_ids: list[UUID] | None = None
+    ) -> Sequence[Job]:
+        """Get the short jobs to be charged."""
+        query = sa.select(Job).where(
+            Job.service_type == ServiceType.SHORT_JOBS,
+            Job.started_at != null(),
+            Job.finished_at != null(),
+            Job.last_charged_at == null(),
+            Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+        )
+        return (await self.db.execute(query)).scalars().all()

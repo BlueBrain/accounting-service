@@ -113,3 +113,5 @@ async def test_charge_storage_jobs(db):
     assert job.last_charged_at is not None
     rows = await _select_ledger_rows(db, job_id)
     assert len(rows) == 2
+
+    # TODO: verify the content of the ledger rows

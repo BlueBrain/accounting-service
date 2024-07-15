@@ -12,20 +12,27 @@ class BaseTask(ABC):
     """BaseTask."""
 
     def __init__(
-        self, initial_delay: float = 0, loop_sleep: float = 1, error_sleep: float = 10
+        self, name: str, initial_delay: float = 0, loop_sleep: float = 1, error_sleep: float = 10
     ) -> None:
         """Init the task.
 
         Args:
+            name: name of the task.
             initial_delay: initial delay in seconds, before starting the task.
             loop_sleep: number of seconds to wait after a loop without errors.
             error_sleep: number of seconds to wait after a loop with errors.
         """
+        self._name = name
         self._initial_delay = initial_delay
         self._loop_sleep = loop_sleep
         self._error_sleep = error_sleep
         self._success = 0
         self._failure = 0
+
+    @property
+    def name(self) -> str:
+        """Return the name of the task."""
+        return self._name
 
     def reset_stats(self) -> None:
         """Reset the task statistics."""

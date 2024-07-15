@@ -66,3 +66,10 @@ class ChargeLongJobsResult:
     finished_uncharged: int = 0
     finished_charged: int = 0
     finished_overcharged: int = 0
+
+
+@dataclass(kw_only=True)
+class ChargeShortJobsResult:
+    """Result of charge_short_jobs."""
+
+    finished_uncharged: int = 0

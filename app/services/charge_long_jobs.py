@@ -19,6 +19,15 @@ from app.utils import utcnow
 L = get_logger(__name__)
 
 
+@asynccontextmanager
+async def _savepoint(db: AsyncSession, job_id: UUID) -> AsyncIterator[None]:
+    try:
+        async with db.begin_nested():
+            yield
+    except Exception:  # noqa: BLE001
+        L.exception("Error when processing job %s", job_id)
+
+
 async def _charge_generic(
     repos: RepositoryGroup,
     job: Job,
@@ -133,17 +142,6 @@ async def _charge_generic(
     )
 
 
-@asynccontextmanager
-async def _commit_one(db: AsyncSession, job_id: UUID) -> AsyncIterator[None]:
-    try:
-        yield
-    except Exception:  # noqa: BLE001
-        L.exception("Error when processing job %s", job_id)
-        await db.rollback()
-    else:
-        await db.commit()
-
-
 async def charge_long_jobs(
     repos: RepositoryGroup,
     min_charging_interval: float = 0,
@@ -162,7 +160,7 @@ async def charge_long_jobs(
     result = ChargeLongJobsResult()
     jobs = await repos.job.get_long_jobs_to_be_charged()
     for job in jobs:
-        async with _commit_one(repos.db, job.id):
+        async with _savepoint(repos.db, job.id):
             match job:
                 case Job(started_at=started_at) if not started_at:
                     # such records should be already excluded by the query
