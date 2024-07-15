@@ -39,6 +39,7 @@ class QueueConsumer(ABC):
 
     def __init__(
         self,
+        name: str,
         queue_name: str,
         initial_delay: int = 0,
         create_sqs_client: Callable[[], AbstractAsyncContextManager[AioBaseClient]] | None = None,
@@ -46,14 +47,21 @@ class QueueConsumer(ABC):
         """Init the QueueConsumer.
 
         Args:
+            name: name of the task.
             queue_name: name of the queue.
             initial_delay: initial delay in seconds, before starting to consume the queue.
             create_sqs_client: optional context manager used to create a sqs client.
         """
+        self._name = name
         self._queue_name = queue_name
         self._initial_delay = initial_delay
         self._create_sqs_client = create_sqs_client or create_default_sqs_client
         self.logger = QueueLoggerAdapter(L, extra={"queue": queue_name})
+
+    @property
+    def name(self) -> str:
+        """Return the name of the task."""
+        return self._name
 
     @property
     def queue_name(self) -> str:

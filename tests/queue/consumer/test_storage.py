@@ -81,6 +81,7 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     _prepare_stub(sqs_stubber, queue_url, message_id, receipt_handle, message_body)
 
     consumer = test_module.StorageQueueConsumer(
+        name="test-storage-consumer",
         queue_name=queue_name,
         create_sqs_client=sqs_client_factory,
     )
