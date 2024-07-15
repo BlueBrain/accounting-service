@@ -5,10 +5,10 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.queue.consumer.base import QueueConsumer
 from app.repositories.account import AccountRepository
 from app.repositories.job import JobRepository
 from app.schemas.queue import StorageEvent
+from app.tasks.consumer.base import QueueConsumer
 from app.utils import create_uuid
 
 

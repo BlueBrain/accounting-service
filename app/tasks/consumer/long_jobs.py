@@ -7,11 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import LongJobStatus
 from app.db.models import Job
-from app.queue.consumer.base import QueueConsumer
 from app.repositories.account import AccountRepository
 from app.repositories.job import JobRepository
 from app.schemas.domain import Accounts
 from app.schemas.queue import LongJobEvent
+from app.tasks.consumer.base import QueueConsumer
 
 
 async def _handle_started(job_repo: JobRepository, event: LongJobEvent, accounts: Accounts) -> Job:

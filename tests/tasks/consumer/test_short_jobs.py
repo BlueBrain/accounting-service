@@ -1,5 +1,5 @@
 from app.config import settings
-from app.queue.consumer import short_jobs as test_module
+from app.tasks.consumer import short_jobs as test_module
 
 
 async def test_consume(sqs_client_factory):

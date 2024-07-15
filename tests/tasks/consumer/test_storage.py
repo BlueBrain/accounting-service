@@ -7,7 +7,7 @@ import sqlalchemy as sa
 
 from app.config import settings
 from app.db.models import Event, Job
-from app.queue.consumer import storage as test_module
+from app.tasks.consumer import storage as test_module
 
 from tests.constants import PROJ_ID, VLAB_ID
 
