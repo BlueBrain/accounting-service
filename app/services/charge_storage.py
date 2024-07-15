@@ -5,7 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import Row
 
-from app.constants import TransactionType
+from app.constants import D0, TransactionType
 from app.logger import get_logger
 from app.repositories.group import RepositoryGroup
 from app.schemas.domain import ChargeStorageResult
@@ -177,8 +177,8 @@ async def _charge_transitioning_storage_jobs(
 
 async def charge_storage_jobs(
     repos: RepositoryGroup,
-    min_charging_interval: float = 0,
-    min_charging_amount: Decimal = Decimal(0),
+    min_charging_interval: float = 0.0,
+    min_charging_amount: Decimal = D0,
 ) -> ChargeStorageResult:
     """Charge for the storage.
 

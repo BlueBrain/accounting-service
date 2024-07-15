@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.constants import TransactionType
+from app.constants import D0, TransactionType
 from app.db.models import Job
 from app.logger import get_logger
 from app.repositories.group import RepositoryGroup
@@ -37,8 +37,8 @@ async def _charge_generic(
     add_fixed_cost: bool,
     release_reservation: bool,
     reason: str,
-    min_charging_interval: float = 0,
-    min_charging_amount: Decimal = Decimal(0),
+    min_charging_interval: float = 0.0,
+    min_charging_amount: Decimal = D0,
 ) -> None:
     now = utcnow()
     total_seconds = (charge_to - charge_from).total_seconds()
@@ -66,7 +66,7 @@ async def _charge_generic(
             service_subtype=job.service_subtype,
         )
         if add_fixed_cost
-        else Decimal(0)
+        else D0
     )
     remaining_reservation = await repos.ledger.get_remaining_reservation_for_job(
         job_id=job.id, account_id=accounts.rsv.id
@@ -84,13 +84,11 @@ async def _charge_generic(
         return
     if total_amount > 0:
         reservation_amount_to_be_charged = min(total_amount, remaining_reservation)
-        project_amount_to_be_charged = max(
-            total_amount - reservation_amount_to_be_charged, Decimal(0)
-        )
+        project_amount_to_be_charged = max(total_amount - reservation_amount_to_be_charged, D0)
         remaining_reservation -= reservation_amount_to_be_charged
     else:
         # the job has been previously overcharged
-        reservation_amount_to_be_charged = Decimal(0)
+        reservation_amount_to_be_charged = D0
         project_amount_to_be_charged = total_amount
 
     if reservation_amount_to_be_charged > 0:
@@ -144,8 +142,8 @@ async def _charge_generic(
 
 async def charge_long_jobs(
     repos: RepositoryGroup,
-    min_charging_interval: float = 0,
-    min_charging_amount: Decimal = Decimal(0),
+    min_charging_interval: float = 0.0,
+    min_charging_amount: Decimal = D0,
 ) -> ChargeLongJobsResult:
     """Charge for long jobs.
 

@@ -1,6 +1,9 @@
 """Constants module."""
 
+from decimal import Decimal
 from enum import StrEnum, auto
+
+D0 = Decimal(0)
 
 
 class EventStatus(StrEnum):

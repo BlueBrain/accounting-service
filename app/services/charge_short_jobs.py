@@ -3,12 +3,11 @@
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from datetime import datetime
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.constants import TransactionType
+from app.constants import D0, TransactionType
 from app.db.models import Job
 from app.logger import get_logger
 from app.repositories.group import RepositoryGroup
@@ -53,7 +52,7 @@ async def _charge_generic(
         err = f"Total amount for job {job.id} is negative: {total_amount}"
         raise RuntimeError(err)
     reservation_amount_to_be_charged = min(total_amount, remaining_reservation)
-    project_amount_to_be_charged = max(total_amount - reservation_amount_to_be_charged, Decimal(0))
+    project_amount_to_be_charged = max(total_amount - reservation_amount_to_be_charged, D0)
     remaining_reservation -= reservation_amount_to_be_charged
     if reservation_amount_to_be_charged > 0:
         await repos.ledger.insert_transaction(

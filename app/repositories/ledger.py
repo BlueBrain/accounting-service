@@ -7,7 +7,7 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy import func, true
 
-from app.constants import AccountType, TransactionType
+from app.constants import D0, AccountType, TransactionType
 from app.db.models import Account, Journal, Ledger
 from app.logger import get_logger
 from app.repositories.base import BaseRepository
@@ -91,4 +91,4 @@ class LedgerRepository(BaseRepository):
                 (Ledger.account_id == account_id) if account_id else true(),
             )
         )
-        return (await self.db.execute(query)).scalar_one() or Decimal(0)
+        return (await self.db.execute(query)).scalar_one() or D0
