@@ -38,7 +38,7 @@ async def _database_context():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def db() -> AsyncIterator[AsyncSession]:
     async with database_session_manager.session() as session:
         yield session
@@ -51,7 +51,7 @@ async def _db_cleanup(db):
     await truncate_tables(db)
 
 
-@pytest.fixture()
+@pytest.fixture
 async def api_client() -> AsyncIterator[AsyncClient]:
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -87,14 +87,14 @@ def sqs_client_factory(sqs_client):
     return factory
 
 
-@pytest.fixture()
+@pytest.fixture
 async def sqs_stubber(sqs_client) -> AsyncIterator[Stubber]:
     """Return a new stubber for each test."""
     with Stubber(sqs_client) as stubber:
         yield stubber
 
 
-@pytest.fixture()
+@pytest.fixture
 async def _db_account(db):
     """Populate the account table."""
     await db.execute(
@@ -135,7 +135,7 @@ async def _db_account(db):
     await db.commit()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_uuid():
     i = 0
 
