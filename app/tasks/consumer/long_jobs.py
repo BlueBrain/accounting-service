@@ -7,15 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import LongJobStatus
 from app.db.models import Job
-from app.repositories.account import AccountRepository
-from app.repositories.job import JobRepository
+from app.repositories.group import RepositoryGroup
 from app.schemas.domain import Accounts
 from app.schemas.queue import LongJobEvent
 from app.tasks.consumer.base import QueueConsumer
 
 
-async def _handle_started(job_repo: JobRepository, event: LongJobEvent, accounts: Accounts) -> Job:
-    return await job_repo.update_job(
+async def _handle_started(repos: RepositoryGroup, event: LongJobEvent, accounts: Accounts) -> Job:
+    return await repos.job.update_job(
         job_id=event.job_id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
@@ -24,8 +23,8 @@ async def _handle_started(job_repo: JobRepository, event: LongJobEvent, accounts
     )
 
 
-async def _handle_running(job_repo: JobRepository, event: LongJobEvent, accounts: Accounts) -> Job:
-    return await job_repo.update_job(
+async def _handle_running(repos: RepositoryGroup, event: LongJobEvent, accounts: Accounts) -> Job:
+    return await repos.job.update_job(
         job_id=event.job_id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
@@ -33,8 +32,8 @@ async def _handle_running(job_repo: JobRepository, event: LongJobEvent, accounts
     )
 
 
-async def _handle_finished(job_repo: JobRepository, event: LongJobEvent, accounts: Accounts) -> Job:
-    return await job_repo.update_job(
+async def _handle_finished(repos: RepositoryGroup, event: LongJobEvent, accounts: Accounts) -> Job:
+    return await repos.job.update_job(
         job_id=event.job_id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
@@ -50,9 +49,8 @@ class LongJobsQueueConsumer(QueueConsumer):
         self.logger.info("Message received: %s", msg)
         event = LongJobEvent.model_validate_json(msg["Body"])
 
-        job_repo = JobRepository(db=db)
-        account_repo = AccountRepository(db=db)
-        accounts = await account_repo.get_accounts_by_proj_id(proj_id=event.proj_id)
+        repos = RepositoryGroup(db=db)
+        accounts = await repos.account.get_accounts_by_proj_id(proj_id=event.proj_id)
 
         try:
             handler = {
@@ -64,5 +62,5 @@ class LongJobsQueueConsumer(QueueConsumer):
             error = f"Status not handled: {event.status}"
             raise ValueError(error) from None
 
-        result = await handler(job_repo, event=event, accounts=accounts)
+        result = await handler(repos, event=event, accounts=accounts)
         return result.id

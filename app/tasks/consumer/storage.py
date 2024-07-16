@@ -5,8 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.account import AccountRepository
-from app.repositories.job import JobRepository
+from app.repositories.group import RepositoryGroup
 from app.schemas.queue import StorageEvent
 from app.tasks.consumer.base import QueueConsumer
 from app.utils import create_uuid
@@ -20,10 +19,9 @@ class StorageQueueConsumer(QueueConsumer):
         self.logger.info("Message received: %s", msg)
         event = StorageEvent.model_validate_json(msg["Body"])
 
-        job_repo = JobRepository(db=db)
-        account_repo = AccountRepository(db=db)
-        accounts = await account_repo.get_accounts_by_proj_id(proj_id=event.proj_id)
-        result = await job_repo.insert_job(
+        repos = RepositoryGroup(db=db)
+        accounts = await repos.account.get_accounts_by_proj_id(proj_id=event.proj_id)
+        result = await repos.job.insert_job(
             job_id=create_uuid(),
             vlab_id=accounts.vlab.id,
             proj_id=accounts.proj.id,
