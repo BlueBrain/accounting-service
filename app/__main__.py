@@ -9,12 +9,12 @@ import uvloop
 from app.config import settings
 from app.db.session import database_session_manager
 from app.logger import configure_logging
-from app.tasks.job_charger.long_jobs import PeriodicLongJobsCharger
-from app.tasks.job_charger.short_jobs import PeriodicShortJobsCharger
-from app.tasks.job_charger.storage import PeriodicStorageCharger
-from app.tasks.queue_consumer.long_jobs import LongJobsQueueConsumer
-from app.tasks.queue_consumer.short_jobs import ShortJobsQueueConsumer
-from app.tasks.queue_consumer.storage import StorageQueueConsumer
+from app.task.job_charger.long_jobs import PeriodicLongJobsCharger
+from app.task.job_charger.short_jobs import PeriodicShortJobsCharger
+from app.task.job_charger.storage import PeriodicStorageCharger
+from app.task.queue_consumer.long_jobs import LongJobsQueueConsumer
+from app.task.queue_consumer.short_jobs import ShortJobsQueueConsumer
+from app.task.queue_consumer.storage import StorageQueueConsumer
 
 
 async def main() -> None:

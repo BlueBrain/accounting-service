@@ -1,4 +1,4 @@
-"""Dependencies for endpoints."""
+"""Dependencies for api."""
 
 from collections.abc import AsyncIterator
 from typing import Annotated
@@ -7,7 +7,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import database_session_manager
-from app.repositories.group import RepositoryGroup
+from app.repository.group import RepositoryGroup
 
 
 async def _database_session_factory() -> AsyncIterator[AsyncSession]:

@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app.api import router
 from app.config import settings
-from app.endpoints import router
 from app.errors import ApiError
 from app.logger import get_logger
 

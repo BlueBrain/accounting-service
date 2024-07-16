@@ -3,7 +3,7 @@ from uuid import UUID
 
 from app.constants import ServiceType
 from app.db.models import Job
-from app.repositories import job as test_module
+from app.repository import job as test_module
 
 
 async def test_insert_job(db):
