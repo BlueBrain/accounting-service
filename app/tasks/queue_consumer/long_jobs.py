@@ -10,7 +10,7 @@ from app.db.models import Job
 from app.repositories.group import RepositoryGroup
 from app.schemas.domain import Accounts
 from app.schemas.queue import LongJobEvent
-from app.tasks.consumer.base import QueueConsumer
+from app.tasks.queue_consumer.base import QueueConsumer
 
 
 async def _handle_started(repos: RepositoryGroup, event: LongJobEvent, accounts: Accounts) -> Job:

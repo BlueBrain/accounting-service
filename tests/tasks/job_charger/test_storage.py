@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from app.tasks.charger import storage as test_module
+from app.tasks.job_charger import storage as test_module
 
 
 @patch(f"{test_module.__name__}.charge_storage_jobs")

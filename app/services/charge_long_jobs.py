@@ -13,7 +13,7 @@ from app.db.models import Job
 from app.logger import get_logger
 from app.repositories.group import RepositoryGroup
 from app.schemas.domain import ChargeLongJobsResult
-from app.services.price import calculate_fixed_cost, calculate_running_cost
+from app.services.pricing import calculate_fixed_cost, calculate_running_cost
 from app.utils import utcnow
 
 L = get_logger(__name__)

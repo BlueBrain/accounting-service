@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from app.tasks.charger import short_jobs as test_module
+from app.tasks.job_charger import short_jobs as test_module
 
 
 @patch(f"{test_module.__name__}.charge_short_jobs")

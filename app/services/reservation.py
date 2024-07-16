@@ -9,7 +9,7 @@ from app.schemas.api import (
     ReservationResponse,
     ShortJobsReservationRequest,
 )
-from app.services.price import calculate_running_cost
+from app.services.pricing import calculate_running_cost
 from app.utils import create_uuid, utcnow
 
 L = get_logger(__name__)

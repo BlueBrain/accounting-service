@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.group import RepositoryGroup
 from app.schemas.queue import StorageEvent
-from app.tasks.consumer.base import QueueConsumer
+from app.tasks.queue_consumer.base import QueueConsumer
 from app.utils import create_uuid
 
 

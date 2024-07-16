@@ -9,7 +9,7 @@ from app.constants import AccountType
 from app.errors import EventError
 from app.repositories.group import RepositoryGroup
 from app.schemas.queue import ShortJobEvent
-from app.tasks.consumer.base import QueueConsumer
+from app.tasks.queue_consumer.base import QueueConsumer
 
 
 class ShortJobsQueueConsumer(QueueConsumer):

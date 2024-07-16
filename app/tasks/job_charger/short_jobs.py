@@ -4,7 +4,7 @@ from app.config import settings
 from app.db.session import database_session_manager
 from app.repositories.group import RepositoryGroup
 from app.services.charge_short_jobs import charge_short_jobs
-from app.tasks.charger.base import BaseTask
+from app.tasks.job_charger.base import BaseTask
 
 
 class PeriodicShortJobsCharger(BaseTask):
