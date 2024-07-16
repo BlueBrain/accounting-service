@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from app.db.models import Base
+from app.db.model import Base
 
 
 async def truncate_tables(session):

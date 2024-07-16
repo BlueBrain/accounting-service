@@ -7,7 +7,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
 
 from app.constants import EventStatus
-from app.db.models import Event
+from app.db.model import Event
 from app.repository.base import BaseRepository
 
 

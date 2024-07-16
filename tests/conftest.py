@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application import app
 from app.config import settings
-from app.db.models import Account
+from app.db.model import Account
 from app.db.session import database_session_manager
 
 from tests.constants import PROJ_ID, RSV_ID, SYS_ID, VLAB_ID

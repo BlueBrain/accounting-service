@@ -2,7 +2,7 @@ import pytest
 import sqlalchemy as sa
 
 from app.constants import ServiceType
-from app.db.models import Job, Journal, Ledger
+from app.db.model import Job, Journal, Ledger
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeShortJobsResult
 from app.service import charge_short_jobs as test_module

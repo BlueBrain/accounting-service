@@ -6,7 +6,7 @@ import sqlalchemy as sa
 from sqlalchemy import and_, true
 
 from app.constants import AccountType
-from app.db.models import Account
+from app.db.model import Account
 from app.logger import get_logger
 from app.repository.base import BaseRepository
 from app.schema.domain import Accounts, ProjAccount, RsvAccount, SysAccount, VlabAccount

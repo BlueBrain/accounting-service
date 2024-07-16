@@ -8,7 +8,7 @@ import sqlalchemy as sa
 from sqlalchemy import func, true
 
 from app.constants import D0, AccountType, TransactionType
-from app.db.models import Account, Journal, Ledger
+from app.db.model import Account, Journal, Ledger
 from app.logger import get_logger
 from app.repository.base import BaseRepository
 

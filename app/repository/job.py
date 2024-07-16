@@ -9,7 +9,7 @@ from sqlalchemy import Row, null, or_, true
 from sqlalchemy.dialects import postgresql as pg
 
 from app.constants import ServiceType
-from app.db.models import Job
+from app.db.model import Job
 from app.logger import get_logger
 from app.repository.base import BaseRepository
 

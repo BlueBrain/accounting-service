@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import D0, TransactionType
-from app.db.models import Job
+from app.db.model import Job
 from app.logger import get_logger
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeShortJobsResult

@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import LongJobStatus
-from app.db.models import Job
+from app.db.model import Job
 from app.repository.group import RepositoryGroup
 from app.schema.domain import Accounts
 from app.schema.queue import LongJobEvent

@@ -1,6 +1,6 @@
 from sqlalchemy import MetaData
 
-from app.db import models as test_module
+from app.db import model as test_module
 
 
 def test_metadata():

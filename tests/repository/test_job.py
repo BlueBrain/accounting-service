@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from app.constants import ServiceType
-from app.db.models import Job
+from app.db.model import Job
 from app.repository import job as test_module
 
 

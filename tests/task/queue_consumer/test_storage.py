@@ -6,7 +6,7 @@ import pytest
 import sqlalchemy as sa
 
 from app.config import settings
-from app.db.models import Event, Job
+from app.db.model import Event, Job
 from app.task.queue_consumer import storage as test_module
 
 from tests.constants import PROJ_ID, VLAB_ID

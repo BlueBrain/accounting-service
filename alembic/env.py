@@ -12,7 +12,7 @@ from alembic import context
 from alembic.environment import MigrationContext
 from alembic.operations import MigrationScript
 from app.config import settings
-from app.db.models import Base
+from app.db.model import Base
 
 L = logging.getLogger("alembic.env")
 
