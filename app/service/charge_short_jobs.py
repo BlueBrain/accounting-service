@@ -1,35 +1,23 @@
 """Charge for short jobs."""
 
-from collections.abc import AsyncIterator, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import Sequence
 from datetime import datetime
-from uuid import UUID
-
-from sqlalchemy.ext.asyncio import AsyncSession
+from functools import partial
 
 from app.constants import D0, TransactionType
-from app.db.model import Job
+from app.db.utils import try_nested
 from app.logger import get_logger
 from app.repository.group import RepositoryGroup
-from app.schema.domain import ChargeShortJobsResult
+from app.schema.domain import ChargeShortJobsResult, StartedJob
 from app.service.pricing import calculate_running_cost
 from app.utils import utcnow
 
 L = get_logger(__name__)
 
 
-@asynccontextmanager
-async def _savepoint(db: AsyncSession, job_id: UUID) -> AsyncIterator[None]:
-    try:
-        async with db.begin_nested():
-            yield
-    except Exception:  # noqa: BLE001
-        L.exception("Error when processing job %s", job_id)
-
-
 async def _charge_generic(
     repos: RepositoryGroup,
-    job: Job,
+    job: StartedJob,
     *,
     last_charged_at: datetime,
     reason: str,
@@ -94,7 +82,7 @@ async def _charge_generic(
 
 async def charge_short_jobs(
     repos: RepositoryGroup,
-    jobs: Sequence[Job] | None = None,
+    jobs: Sequence[StartedJob] | None = None,
 ) -> ChargeShortJobsResult:
     """Charge for short jobs.
 
@@ -106,7 +94,9 @@ async def charge_short_jobs(
     result = ChargeShortJobsResult()
     jobs = jobs or await repos.job.get_short_jobs_to_be_charged()
     for job in jobs:
-        async with _savepoint(repos.db, job.id):
+        async with try_nested(
+            repos.db, err_callback=partial(L.exception, "Error processing short job %s", job.id)
+        ):
             await _charge_generic(repos, job, last_charged_at=now, reason="finished_uncharged")
             result.finished_uncharged += 1
     return result

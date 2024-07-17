@@ -22,7 +22,7 @@ async def _insert_job(db, job_id, units, started_at):
                     "service_type": ServiceType.STORAGE,
                     "units": int(units),
                     "started_at": started_at,
-                    "last_alive_at": None,
+                    "last_alive_at": started_at,
                     "last_charged_at": None,
                     "finished_at": None,
                     "cancelled_at": None,

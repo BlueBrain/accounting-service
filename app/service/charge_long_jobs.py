@@ -1,36 +1,24 @@
 """Charge for long jobs."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from datetime import datetime
 from decimal import Decimal
-from uuid import UUID
-
-from sqlalchemy.ext.asyncio import AsyncSession
+from functools import partial
 
 from app.constants import D0, TransactionType
 from app.db.model import Job
+from app.db.utils import try_nested
 from app.logger import get_logger
 from app.repository.group import RepositoryGroup
-from app.schema.domain import ChargeLongJobsResult
+from app.schema.domain import ChargeLongJobsResult, StartedJob
 from app.service.pricing import calculate_fixed_cost, calculate_running_cost
 from app.utils import utcnow
 
 L = get_logger(__name__)
 
 
-@asynccontextmanager
-async def _savepoint(db: AsyncSession, job_id: UUID) -> AsyncIterator[None]:
-    try:
-        async with db.begin_nested():
-            yield
-    except Exception:  # noqa: BLE001
-        L.exception("Error when processing job %s", job_id)
-
-
 async def _charge_generic(
     repos: RepositoryGroup,
-    job: Job,
+    job: StartedJob,
     *,
     charge_from: datetime,
     charge_to: datetime,
@@ -158,17 +146,16 @@ async def charge_long_jobs(
     result = ChargeLongJobsResult()
     jobs = await repos.job.get_long_jobs_to_be_charged()
     for job in jobs:
-        async with _savepoint(repos.db, job.id):
+        async with try_nested(
+            repos.db, err_callback=partial(L.exception, "Error processing long job %s", job.id)
+        ):
             match job:
-                case Job(started_at=started_at) if not started_at:
-                    # such records should be already excluded by the query
-                    pass
-                case Job(last_charged_at=None, finished_at=None):
+                case StartedJob(last_charged_at=None, finished_at=None):
                     # Charge fixed cost and first running time, set last_charged_at=now
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=started_at,
+                        charge_from=job.started_at,
                         charge_to=now,
                         add_fixed_cost=True,
                         release_reservation=False,
@@ -177,7 +164,7 @@ async def charge_long_jobs(
                         min_charging_amount=min_charging_amount,
                     )
                     result.unfinished_uncharged += 1
-                case Job(last_charged_at=datetime() as last_charged_at, finished_at=None):
+                case StartedJob(last_charged_at=datetime() as last_charged_at, finished_at=None):
                     # Charge running time since the last charge, set last_charged_at=now
                     await _charge_generic(
                         repos,
@@ -191,20 +178,20 @@ async def charge_long_jobs(
                         min_charging_amount=min_charging_amount,
                     )
                     result.unfinished_charged += 1
-                case Job(last_charged_at=None, finished_at=datetime() as finished_at):
+                case StartedJob(last_charged_at=None, finished_at=datetime() as finished_at):
                     # Charge fixed costs and full running time, set last_charged_at=finished_at,
                     # release reservation
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=started_at,
+                        charge_from=job.started_at,
                         charge_to=finished_at,
                         add_fixed_cost=True,
                         release_reservation=True,
                         reason="finished_uncharged",
                     )
                     result.finished_uncharged += 1
-                case Job(last_charged_at=last_charged_at, finished_at=finished_at) if (
+                case StartedJob(last_charged_at=last_charged_at, finished_at=finished_at) if (
                     last_charged_at and finished_at and last_charged_at < finished_at
                 ):
                     # Charge remaining running time, set last_charged_at=finished_at,
@@ -219,7 +206,7 @@ async def charge_long_jobs(
                         reason="finished_charged",
                     )
                     result.finished_charged += 1
-                case Job(last_charged_at=last_charged_at, finished_at=finished_at) if (
+                case StartedJob(last_charged_at=last_charged_at, finished_at=finished_at) if (
                     last_charged_at and finished_at and last_charged_at > finished_at
                 ):
                     # Refund extra time already charged, set last_charged_at=finished_at, release

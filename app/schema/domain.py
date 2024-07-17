@@ -1,11 +1,14 @@
 """Domain entities."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.constants import ServiceType
 
 
 class BaseAccount(BaseModel):
@@ -44,6 +47,40 @@ class Accounts(BaseModel):
     vlab: VlabAccount
     proj: ProjAccount
     rsv: RsvAccount
+
+
+class BaseJob(BaseModel):
+    """BaseJob."""
+
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    vlab_id: UUID
+    proj_id: UUID
+    service_type: ServiceType
+    service_subtype: str | None
+    reserved_units: int
+    units: int
+    reserved_at: datetime | None
+    started_at: datetime | None
+    last_alive_at: datetime | None
+    last_charged_at: datetime | None
+    finished_at: datetime | None
+    properties: dict[str, Any] | None
+
+
+class StartedJob(BaseJob):
+    """StartedJob (finished or not)."""
+
+    started_at: datetime
+    last_alive_at: datetime
+
+
+class ChargedJob(BaseJob):
+    """ChargedJob (finished or not)."""
+
+    started_at: datetime
+    last_alive_at: datetime
+    last_charged_at: datetime
 
 
 @dataclass(kw_only=True)

@@ -30,5 +30,6 @@ class StorageQueueConsumer(QueueConsumer):
             reserved_units=event.size,
             units=event.size,
             started_at=event.timestamp,
+            last_alive_at=event.timestamp,
         )
         return result.id
