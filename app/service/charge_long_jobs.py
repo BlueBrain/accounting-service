@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from decimal import Decimal
-from functools import partial
 
 from app.constants import D0, TransactionType
 from app.db.model import Job
@@ -32,7 +31,7 @@ async def _charge_generic(
     total_seconds = (charge_to - charge_from).total_seconds()
     if 0 < total_seconds < min_charging_interval:
         L.debug(
-            "Ignoring charge for job %s: elapsed seconds since last charge: %.3f",
+            "Not charging for job %s: elapsed seconds since last charge: %.3f",
             job.id,
             total_seconds,
         )
@@ -65,7 +64,7 @@ async def _charge_generic(
     total_amount = running_amount_to_be_charged + fixed_amount_to_be_charged
     if abs(total_amount) < min_charging_amount:
         L.debug(
-            "Ignoring charge for job %s: calculated amount too low: %.6f",
+            "Not charging for job %s: calculated amount too low: %.6f",
             job.id,
             total_amount,
         )
@@ -142,13 +141,16 @@ async def charge_long_jobs(
         min_charging_amount: minimum amount of money to be charged for running jobs.
             It doesn't affect finished jobs.
     """
+
+    def _on_error() -> None:
+        L.exception("Error processing long job %s", job.id)
+        result.failure += 1
+
     now = utcnow()
     result = ChargeLongJobsResult()
     jobs = await repos.job.get_long_jobs_to_be_charged()
     for job in jobs:
-        async with try_nested(
-            repos.db, err_callback=partial(L.exception, "Error processing long job %s", job.id)
-        ):
+        async with try_nested(repos.db, on_error=_on_error):
             match job:
                 case StartedJob(last_charged_at=None, finished_at=None):
                     # Charge fixed cost and first running time, set last_charged_at=now

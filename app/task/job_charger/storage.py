@@ -3,7 +3,7 @@
 from app.config import settings
 from app.db.session import database_session_manager
 from app.repository.group import RepositoryGroup
-from app.service.charge_storage import charge_storage_jobs
+from app.service.charge_storage import charge_running_storage_jobs
 from app.task.job_charger.base import BaseTask
 
 
@@ -22,8 +22,10 @@ class PeriodicStorageCharger(BaseTask):
     async def _run_once(self) -> None:  # noqa: PLR6301
         async with database_session_manager.session() as db:
             repos = RepositoryGroup(db=db)
-            await charge_storage_jobs(
+            jobs = await repos.job.get_storage_jobs_to_be_charged()
+            await charge_running_storage_jobs(
                 repos=repos,
+                jobs=jobs,
                 min_charging_interval=settings.CHARGE_STORAGE_MIN_CHARGING_INTERVAL,
                 min_charging_amount=settings.CHARGE_STORAGE_MIN_CHARGING_AMOUNT,
             )

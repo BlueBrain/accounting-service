@@ -2,7 +2,6 @@
 
 from collections.abc import Sequence
 from datetime import datetime
-from functools import partial
 
 from app.constants import D0, TransactionType
 from app.db.utils import try_nested
@@ -90,13 +89,18 @@ async def charge_short_jobs(
         repos: repository group instance.
         jobs: optional sequence of jobs.
     """
+
+    def _on_error() -> None:
+        L.exception("Error processing short job %s", job.id)
+        result.failure += 1
+
+    def _on_success() -> None:
+        result.success += 1
+
     now = utcnow()
     result = ChargeShortJobsResult()
     jobs = jobs or await repos.job.get_short_jobs_to_be_charged()
     for job in jobs:
-        async with try_nested(
-            repos.db, err_callback=partial(L.exception, "Error processing short job %s", job.id)
-        ):
+        async with try_nested(repos.db, on_error=_on_error, on_success=_on_success):
             await _charge_generic(repos, job, last_charged_at=now, reason="finished_uncharged")
-            result.finished_uncharged += 1
     return result

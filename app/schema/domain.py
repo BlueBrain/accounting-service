@@ -75,25 +75,6 @@ class StartedJob(BaseJob):
     last_alive_at: datetime
 
 
-class ChargedJob(BaseJob):
-    """ChargedJob (finished or not)."""
-
-    started_at: datetime
-    last_alive_at: datetime
-    last_charged_at: datetime
-
-
-@dataclass(kw_only=True)
-class ChargeStorageResult:
-    """Result of charge_storage."""
-
-    not_charged: int = 0
-    last_charged: int = 0
-    new_ids: int = 0
-    running_ids: int = 0
-    transitioning_ids: int = 0
-
-
 @dataclass(kw_only=True)
 class ChargeLongJobsResult:
     """Result of charge_long_jobs."""
@@ -103,10 +84,20 @@ class ChargeLongJobsResult:
     finished_uncharged: int = 0
     finished_charged: int = 0
     finished_overcharged: int = 0
+    failure: int = 0
 
 
 @dataclass(kw_only=True)
 class ChargeShortJobsResult:
     """Result of charge_short_jobs."""
 
-    finished_uncharged: int = 0
+    success: int = 0
+    failure: int = 0
+
+
+@dataclass(kw_only=True)
+class ChargeStorageResult:
+    """Result of charge_storage."""
+
+    success: int = 0
+    failure: int = 0

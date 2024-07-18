@@ -1,7 +1,6 @@
 """Job message repository module."""
 
 from collections.abc import Sequence
-from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -12,7 +11,7 @@ from app.constants import ServiceType
 from app.db.model import Job
 from app.logger import get_logger
 from app.repository.base import BaseRepository
-from app.schema.domain import ChargedJob, StartedJob
+from app.schema.domain import StartedJob
 
 L = get_logger(__name__)
 
@@ -67,51 +66,28 @@ class JobRepository(BaseRepository):
         res = await self.db.scalars(query)
         return res.all()
 
-    async def get_storage_jobs_last_charged(
-        self,
-        *,
-        project_ids: list[UUID] | None = None,
-        min_charged_at: datetime | None = None,
-    ) -> dict[UUID, ChargedJob]:
-        """Get the job of type storage that was last charged, for each project."""
-        query = (
-            sa.select(Job)
-            .distinct(Job.proj_id)
-            .where(
-                Job.service_type == ServiceType.STORAGE,
-                Job.last_charged_at != null(),
-                Job.started_at != null(),
-                Job.proj_id.in_(project_ids) if project_ids is not None else true(),
-                (Job.last_charged_at >= min_charged_at) if min_charged_at else true(),
-            )
-            .order_by(Job.proj_id, Job.last_charged_at.desc())
-        )
-        rows = (await self.db.execute(query)).scalars().all()
-        return {row.proj_id: ChargedJob.model_validate(row) for row in rows}
+    async def get_storage_jobs_to_be_charged(
+        self, *, proj_ids: list[UUID] | None = None
+    ) -> list[StartedJob]:
+        """Get the jobs of type storage not finished yet.
 
-    async def get_storage_jobs_not_charged(
-        self, *, project_ids: list[UUID] | None = None
-    ) -> dict[UUID, StartedJob]:
-        """Get the job of type storage not charged yet, for each project.
-
-        If there are multiple not-charged jobs per project, return the oldest one.
+        There should be only one record per project, but this isn't enforced.
+        The selected records are locked FOR UPDATE.
         """
         query = (
             sa.select(Job)
-            .distinct(Job.proj_id)
             .where(
                 Job.service_type == ServiceType.STORAGE,
-                Job.last_charged_at == null(),
-                Job.started_at != null(),
-                Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+                Job.finished_at == null(),
+                Job.proj_id.in_(proj_ids) if proj_ids is not None else true(),
             )
-            .order_by(Job.proj_id, Job.started_at)
+            .with_for_update()
         )
         rows = (await self.db.execute(query)).scalars().all()
-        return {row.proj_id: StartedJob.model_validate(row) for row in rows}
+        return [StartedJob.model_validate(row) for row in rows]
 
     async def get_long_jobs_to_be_charged(
-        self, *, project_ids: list[UUID] | None = None
+        self, *, proj_ids: list[UUID] | None = None
     ) -> list[StartedJob]:
         """Get the long jobs to be charged.
 
@@ -129,13 +105,13 @@ class JobRepository(BaseRepository):
                 Job.last_charged_at == null(),
                 Job.finished_at == null(),
             ),
-            Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+            Job.proj_id.in_(proj_ids) if proj_ids is not None else true(),
         )
         rows = (await self.db.execute(query)).scalars().all()
         return [StartedJob.model_validate(row) for row in rows]
 
     async def get_short_jobs_to_be_charged(
-        self, *, project_ids: list[UUID] | None = None
+        self, *, proj_ids: list[UUID] | None = None
     ) -> list[StartedJob]:
         """Get the short jobs to be charged."""
         query = sa.select(Job).where(
@@ -143,7 +119,7 @@ class JobRepository(BaseRepository):
             Job.started_at != null(),
             Job.finished_at != null(),
             Job.last_charged_at == null(),
-            Job.proj_id.in_(project_ids) if project_ids is not None else true(),
+            Job.proj_id.in_(proj_ids) if proj_ids is not None else true(),
         )
         rows = (await self.db.execute(query)).scalars().all()
         return [StartedJob.model_validate(row) for row in rows]
