@@ -2,9 +2,6 @@
 
 import uuid
 from datetime import UTC, datetime
-from typing import TypeVar
-
-T = TypeVar("T")
 
 
 def utcnow() -> datetime:
