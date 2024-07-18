@@ -31,7 +31,7 @@ async def _charge_generic(
     total_seconds = (charge_to - charge_from).total_seconds()
     if 0 < total_seconds < min_charging_interval:
         L.debug(
-            "Not charging for job %s: elapsed seconds since last charge: %.3f",
+            "Not charging job %s: elapsed seconds since last charge: %.3f",
             job.id,
             total_seconds,
         )
@@ -64,7 +64,7 @@ async def _charge_generic(
     total_amount = running_amount_to_be_charged + fixed_amount_to_be_charged
     if abs(total_amount) < min_charging_amount:
         L.debug(
-            "Not charging for job %s: calculated amount too low: %.6f",
+            "Not charging job %s: calculated amount too low: %.6f",
             job.id,
             total_amount,
         )

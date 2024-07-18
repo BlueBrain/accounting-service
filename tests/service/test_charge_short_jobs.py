@@ -56,19 +56,14 @@ async def test_charge_short_jobs(db):
 
     # no jobs
     result = await test_module.charge_short_jobs(repos)
-    assert result == ChargeShortJobsResult(
-        finished_uncharged=0,
-    )
-
+    assert result == ChargeShortJobsResult()
     # new job
     job_id = create_uuid()
     now = utcnow()
     await _insert_job(db, job_id, units=10, started_at=now)
 
     result = await test_module.charge_short_jobs(repos)
-    assert result == ChargeShortJobsResult(
-        finished_uncharged=0,
-    )
+    assert result == ChargeShortJobsResult(success=0)
 
     job = await _select_job(db, job_id)
     assert job.last_charged_at is None
@@ -79,9 +74,7 @@ async def test_charge_short_jobs(db):
     assert job.finished_at == now
 
     result = await test_module.charge_short_jobs(repos)
-    assert result == ChargeShortJobsResult(
-        finished_uncharged=1,
-    )
+    assert result == ChargeShortJobsResult(success=1)
     job = await _select_job(db, job_id)
     assert job.last_charged_at is not None
     rows = await _select_ledger_rows(db, job_id)

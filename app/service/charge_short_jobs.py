@@ -1,6 +1,5 @@
 """Charge for short jobs."""
 
-from collections.abc import Sequence
 from datetime import datetime
 
 from app.constants import D0, TransactionType
@@ -79,10 +78,7 @@ async def _charge_generic(
     )
 
 
-async def charge_short_jobs(
-    repos: RepositoryGroup,
-    jobs: Sequence[StartedJob] | None = None,
-) -> ChargeShortJobsResult:
+async def charge_short_jobs(repos: RepositoryGroup) -> ChargeShortJobsResult:
     """Charge for short jobs.
 
     Args:
@@ -99,7 +95,7 @@ async def charge_short_jobs(
 
     now = utcnow()
     result = ChargeShortJobsResult()
-    jobs = jobs or await repos.job.get_short_jobs_to_be_charged()
+    jobs = await repos.job.get_short_jobs_to_be_charged()
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error, on_success=_on_success):
             await _charge_generic(repos, job, last_charged_at=now, reason="finished_uncharged")

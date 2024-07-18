@@ -1,6 +1,7 @@
 """Job message repository module."""
 
 from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -54,6 +55,23 @@ class JobRepository(BaseRepository):
         )
         return (await self.db.execute(query)).scalar_one()
 
+    async def update_finished_at(
+        self, vlab_id: UUID, proj_id: UUID, service_type: ServiceType, finished_at: datetime
+    ) -> Sequence[Job]:
+        """Update finished_at if it's not already set."""
+        query = (
+            sa.update(Job)
+            .values(finished_at=finished_at)
+            .where(
+                Job.vlab_id == vlab_id,
+                Job.proj_id == proj_id,
+                Job.service_type == service_type,
+                Job.finished_at == null(),
+            )
+            .returning(Job)
+        )
+        return (await self.db.execute(query)).scalars().all()
+
     async def get_all_rows(self) -> Sequence[sa.Row]:
         """Get all the rows as Row objects."""
         query = sa.select(Job)
@@ -66,22 +84,34 @@ class JobRepository(BaseRepository):
         res = await self.db.scalars(query)
         return res.all()
 
-    async def get_storage_jobs_to_be_charged(
+    async def get_storage_jobs_running(
         self, *, proj_ids: list[UUID] | None = None
     ) -> list[StartedJob]:
-        """Get the jobs of type storage not finished yet.
+        """Get the jobs of type storage not finished yet, partially charged or not.
 
         There should be only one record per project, but this isn't enforced.
         The selected records are locked FOR UPDATE.
         """
-        query = (
-            sa.select(Job)
-            .where(
-                Job.service_type == ServiceType.STORAGE,
-                Job.finished_at == null(),
-                Job.proj_id.in_(proj_ids) if proj_ids is not None else true(),
-            )
-            .with_for_update()
+        query = sa.select(Job).where(
+            Job.service_type == ServiceType.STORAGE,
+            Job.finished_at == null(),
+            Job.proj_id.in_(proj_ids) if proj_ids is not None else true(),
+        )
+        rows = (await self.db.execute(query)).scalars().all()
+        return [StartedJob.model_validate(row) for row in rows]
+
+    async def get_storage_jobs_finished_to_be_charged(
+        self, *, proj_ids: list[UUID] | None = None
+    ) -> list[StartedJob]:
+        """Get the jobs of type storage finished, not charged or only partially charged."""
+        query = sa.select(Job).where(
+            Job.service_type == ServiceType.STORAGE,
+            or_(
+                Job.last_charged_at != Job.finished_at,
+                Job.last_charged_at == null(),
+            ),
+            Job.finished_at != null(),
+            Job.proj_id.in_(proj_ids) if proj_ids is not None else true(),
         )
         rows = (await self.db.execute(query)).scalars().all()
         return [StartedJob.model_validate(row) for row in rows]

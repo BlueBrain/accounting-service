@@ -1,7 +1,6 @@
 """Charge for storage."""
 
 from collections.abc import Sequence
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -9,7 +8,7 @@ from app.constants import D0, TransactionType
 from app.db.utils import try_nested
 from app.logger import get_logger
 from app.repository.group import RepositoryGroup
-from app.schema.domain import ChargeStorageResult, StartedJob, SysAccount
+from app.schema.domain import ChargeStorageResult, StartedJob
 from app.utils import utcnow
 
 L = get_logger(__name__)
@@ -32,27 +31,26 @@ async def _charge_one(
     job: StartedJob,
     min_charging_interval: float,
     min_charging_amount: Decimal,
-    system_account: SysAccount,
-    charging_at: datetime,
-    finishing_at: datetime | None,
     properties: dict[str, Any] | None = None,
 ) -> None:
+    charging_at = job.finished_at or utcnow()
     total_seconds = (charging_at - (job.last_charged_at or job.started_at)).total_seconds()
-    if total_seconds < min_charging_interval:
+    if not job.finished_at and total_seconds < min_charging_interval:
         L.debug(
-            "Not charging for job %s: elapsed seconds since last charge: %.3f",
+            "Not charging job %s: elapsed seconds since last charge: %.3f",
             job.id,
             total_seconds,
         )
         return
+    system_account = await repos.account.get_system_account()
     accounts = await repos.account.get_accounts_by_proj_id(proj_id=job.proj_id)
     amount = _get_amount(
         total_seconds=total_seconds,
         total_bytes=job.units,
     )
-    if abs(amount) < min_charging_amount:
+    if not job.finished_at and abs(amount) < min_charging_amount:
         L.debug(
-            "Not charging for job %s: calculated amount too low: %.6f",
+            "Not charging job %s: calculated amount too low: %.6f",
             job.id,
             amount,
         )
@@ -71,17 +69,14 @@ async def _charge_one(
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
         last_charged_at=charging_at,
-        finished_at=finishing_at,
     )
 
 
-async def charge_running_storage_jobs(
+async def charge_storage_jobs(
     repos: RepositoryGroup,
     jobs: Sequence[StartedJob],
     min_charging_interval: float = 0.0,
     min_charging_amount: Decimal = D0,
-    charging_at: datetime | None = None,
-    finishing_at: datetime | None = None,
 ) -> ChargeStorageResult:
     """Charge for the storage and update the corresponding job.
 
@@ -90,8 +85,6 @@ async def charge_running_storage_jobs(
         jobs: sequence of jobs to be processed, or None to select all the job not finished yet.
         min_charging_interval: minimum interval between charges for running jobs.
         min_charging_amount: minimum amount of money to be charged for running jobs.
-        charging_at: charging timestamp, or None to use the current timestamp.
-        finishing_at: finishing timestamp, or None if the job isn't finished.
     """
 
     def _on_error() -> None:
@@ -102,8 +95,6 @@ async def charge_running_storage_jobs(
         result.success += 1
 
     result = ChargeStorageResult()
-    charging_at = charging_at or utcnow()
-    system_account = await repos.account.get_system_account()
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error, on_success=_on_success):
             await _charge_one(
@@ -111,8 +102,5 @@ async def charge_running_storage_jobs(
                 job=job,
                 min_charging_interval=min_charging_interval,
                 min_charging_amount=min_charging_amount,
-                system_account=system_account,
-                charging_at=charging_at,
-                finishing_at=finishing_at,
             )
     return result

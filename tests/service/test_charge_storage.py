@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from app.constants import ServiceType
 from app.db.model import Job, Journal, Ledger
 from app.repository.group import RepositoryGroup
-from app.schema.domain import ChargeStorageResult
+from app.schema.domain import ChargeStorageResult, StartedJob
 from app.service import charge_storage as test_module
 from app.utils import create_uuid, utcnow
 
@@ -33,7 +33,8 @@ async def _insert_job(db, job_id, units, started_at):
 
 
 async def _select_job(db, job_id):
-    return (await db.execute(sa.select(Job).where(Job.id == job_id))).scalar_one_or_none()
+    job = (await db.execute(sa.select(Job).where(Job.id == job_id))).scalar_one_or_none()
+    return StartedJob.model_validate(job)
 
 
 async def _select_ledger_rows(db, job_id):
@@ -49,14 +50,7 @@ async def test_charge_storage_jobs(db):
     repos = RepositoryGroup(db)
 
     # no jobs
-    result = await test_module.charge_storage_jobs(repos)
-    assert result == ChargeStorageResult(
-        last_charged=0,
-        new_ids=0,
-        not_charged=0,
-        running_ids=0,
-        transitioning_ids=0,
-    )
+    result = await test_module.charge_storage_jobs(repos, jobs=[])
 
     # new job
     job_id = create_uuid()
@@ -66,28 +60,16 @@ async def test_charge_storage_jobs(db):
     job = await _select_job(db, job_id)
     assert job.last_charged_at is None
 
-    result = await test_module.charge_storage_jobs(repos)
-    assert result == ChargeStorageResult(
-        not_charged=1,
-        last_charged=0,
-        new_ids=1,
-        running_ids=0,
-        transitioning_ids=0,
-    )
+    result = await test_module.charge_storage_jobs(repos, jobs=[job])
+    assert result == ChargeStorageResult(success=1)
     job = await _select_job(db, job_id)
     assert job.last_charged_at is not None
     rows = await _select_ledger_rows(db, job_id)
     assert len(rows) == 2
 
     # running job
-    result = await test_module.charge_storage_jobs(repos)
-    assert result == ChargeStorageResult(
-        not_charged=0,
-        last_charged=1,
-        new_ids=0,
-        running_ids=1,
-        transitioning_ids=0,
-    )
+    result = await test_module.charge_storage_jobs(repos, jobs=[job])
+    assert result == ChargeStorageResult(success=1)
     job = await _select_job(db, job_id)
     assert job.last_charged_at is not None
     rows = await _select_ledger_rows(db, job_id)
@@ -101,14 +83,8 @@ async def test_charge_storage_jobs(db):
     job = await _select_job(db, job_id)
     assert job.last_charged_at is None
 
-    result = await test_module.charge_storage_jobs(repos)
-    assert result == ChargeStorageResult(
-        not_charged=1,
-        last_charged=1,
-        new_ids=0,
-        running_ids=0,
-        transitioning_ids=1,
-    )
+    result = await test_module.charge_storage_jobs(repos, jobs=[job])
+    assert result == ChargeStorageResult(success=1)
     job = await _select_job(db, job_id)
     assert job.last_charged_at is not None
     rows = await _select_ledger_rows(db, job_id)
