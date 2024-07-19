@@ -1,10 +1,9 @@
 """Base consumer module."""
 
 import asyncio
-import logging
 import traceback
 from abc import ABC, abstractmethod
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 from typing import Any
 from uuid import UUID
@@ -16,22 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.constants import EventStatus
 from app.db.session import database_session_manager
-from app.logger import get_logger
+from app.logger import L
 from app.queue.utils import create_default_sqs_client, get_queue_url
 from app.repository.event import EventRepository
-
-L = get_logger(__name__)
-
-
-class QueueLoggerAdapter(logging.LoggerAdapter):
-    """QueueLoggerAdapter to add the queue name to the logs."""
-
-    def process(
-        self, msg: Any, kwargs: MutableMapping[str, Any]
-    ) -> tuple[Any, MutableMapping[str, Any]]:
-        """Process a log message."""
-        queue_name = self.extra["queue"] if self.extra else ""
-        return f"[{queue_name}] {msg}", kwargs
 
 
 class QueueConsumer(ABC):
@@ -56,7 +42,7 @@ class QueueConsumer(ABC):
         self._queue_name = queue_name
         self._initial_delay = initial_delay
         self._create_sqs_client = create_sqs_client or create_default_sqs_client
-        self.logger = QueueLoggerAdapter(L, extra={"queue": queue_name})
+        self.logger = L.bind(name=name, class_name=self.__class__.__name__, queue=queue_name)
 
     @property
     def name(self) -> str:
@@ -125,7 +111,7 @@ class QueueConsumer(ABC):
             WaitTimeSeconds=20,  # enable long polling
         )
         messages = response.get("Messages", [])
-        self.logger.info("Received %s messages", len(messages))
+        self.logger.info("Received {} messages", len(messages))
         for msg in messages:
             receipt_handle = msg["ReceiptHandle"]
             if await self._wrap(msg=msg):
@@ -142,9 +128,9 @@ class QueueConsumer(ABC):
         """
         counter = 0
         async with self._create_sqs_client() as sqs_client:
-            self.logger.info("Pulling messages off the queue %s", self._queue_name)
-            queue_url = await get_queue_url(sqs_client, queue_name=self._queue_name)
+            self.logger.info("Starting {}", self._name)
             await asyncio.sleep(self._initial_delay)
+            queue_url = await get_queue_url(sqs_client, queue_name=self._queue_name)
             while limit == 0 or counter < limit:
                 try:
                     await self._run_once(sqs_client, queue_url)

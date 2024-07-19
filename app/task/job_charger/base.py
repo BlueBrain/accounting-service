@@ -3,9 +3,7 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from app.logger import get_logger
-
-L = get_logger(__name__)
+from app.logger import L
 
 
 class BaseTask(ABC):
@@ -28,6 +26,7 @@ class BaseTask(ABC):
         self._error_sleep = error_sleep
         self._success = 0
         self._failure = 0
+        self.logger = L.bind(name=name, class_name=self.__class__.__name__)
 
     @property
     def name(self) -> str:
@@ -62,15 +61,15 @@ class BaseTask(ABC):
         Args:
             limit: maximum number of loops, or 0 to run forever.
         """
-        L.info("[%s] Starting...", self.__class__.__name__)
+        self.logger.info("Starting {}", self.name)
         await asyncio.sleep(self._initial_delay)
         while True:
             try:
                 await self._run_once()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 self._failure += 1
                 sleep = self._error_sleep
-                L.exception("[%s] Error in run_once %s", self.__class__.__name__, self._failure)
+                self.logger.exception("Error in run_once {}", self._failure)
             else:
                 self._success += 1
                 sleep = self._loop_sleep

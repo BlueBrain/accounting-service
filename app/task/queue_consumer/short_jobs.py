@@ -17,7 +17,7 @@ class ShortJobsQueueConsumer(QueueConsumer):
 
     async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> UUID:
         """Consume the message."""
-        self.logger.info("Message received: %s", msg)
+        self.logger.info("Message received: {}", msg)
         event = ShortJobEvent.model_validate_json(msg["Body"])
         repos = RepositoryGroup(db=db)
 

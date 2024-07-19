@@ -1,7 +1,7 @@
 """Reservation service."""
 
 from app.constants import AccountType, TransactionType
-from app.logger import get_logger
+from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.api import (
     LongJobsReservationRequest,
@@ -11,8 +11,6 @@ from app.schema.api import (
 )
 from app.service.pricing import calculate_running_cost
 from app.utils import create_uuid, utcnow
-
-L = get_logger(__name__)
 
 
 async def _make_reservation(
@@ -34,7 +32,7 @@ async def _make_reservation(
     )
     if requested_amount > available_amount:
         L.info(
-            "Reservation not allowed for project %s: requested=%s, available=%s",
+            "Reservation not allowed for project {}: requested={}, available={}",
             accounts.proj.id,
             requested_amount,
             available_amount,
@@ -66,7 +64,7 @@ async def _make_reservation(
         properties=None,
     )
     L.info(
-        "Reservation allowed for project %s: requested=%s, available=%s, job_id=%s",
+        "Reservation allowed for project {}: requested={}, available={}, job_id={}",
         accounts.proj.id,
         requested_amount,
         available_amount,

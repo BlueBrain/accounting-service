@@ -32,7 +32,7 @@ async def main() -> None:
             host="0.0.0.0",
             port=settings.UVICORN_PORT,
             proxy_headers=True,
-            log_config=settings.LOGGING_CONFIG,
+            log_config=None,
         )
     )
     long_jobs_consumer = LongJobsQueueConsumer(

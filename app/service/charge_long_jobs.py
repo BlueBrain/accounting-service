@@ -6,13 +6,11 @@ from decimal import Decimal
 from app.constants import D0, TransactionType
 from app.db.model import Job
 from app.db.utils import try_nested
-from app.logger import get_logger
+from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeLongJobsResult, StartedJob
 from app.service.pricing import calculate_fixed_cost, calculate_running_cost
 from app.utils import utcnow
-
-L = get_logger(__name__)
 
 
 async def _charge_generic(
@@ -31,7 +29,7 @@ async def _charge_generic(
     total_seconds = (charge_to - charge_from).total_seconds()
     if 0 < total_seconds < min_charging_interval:
         L.debug(
-            "Not charging job %s: elapsed seconds since last charge: %.3f",
+            "Not charging job {}: elapsed seconds since last charge: {:.3f}",
             job.id,
             total_seconds,
         )
@@ -64,7 +62,7 @@ async def _charge_generic(
     total_amount = running_amount_to_be_charged + fixed_amount_to_be_charged
     if abs(total_amount) < min_charging_amount:
         L.debug(
-            "Not charging job %s: calculated amount too low: %.6f",
+            "Not charging job {}: calculated amount too low: {:.6f}",
             job.id,
             total_amount,
         )
@@ -143,7 +141,7 @@ async def charge_long_jobs(
     """
 
     def _on_error() -> None:
-        L.exception("Error processing long job %s", job.id)
+        L.exception("Error processing long job {}", job.id)
         result.failure += 1
 
     now = utcnow()

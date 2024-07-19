@@ -1,29 +1,17 @@
-version: 1
-disable_existing_loggers: False
-formatters:
-  simple:
-    format: "%(asctime)s %(levelname)s %(name)s: %(message)s"
 handlers:
-  console:
-    class: logging.StreamHandler
-    level: DEBUG
-    formatter: simple
-    stream: ext://sys.stderr
-loggers:
-  app:
-    level: DEBUG
-  uvicorn:
-    level: INFO
-  sqlalchemy.engine:
-    level: INFO
-  sqlalchemy.pool:
-    level: INFO
-  asyncio:
-    level: INFO
-  botocore:
-    level: INFO
-  aiobotocore:
-    level: INFO
-root:
-  level: INFO
-  handlers: [console]
+- sink: ext://sys.stderr
+  format: ext://app.logger.json_formatter
+  level: DEBUG
+  backtrace: false
+  diagnose: false
+  enqueue: false
+  catch: true
+activation:
+- ["app", true]
+standard_loggers:
+  "uvicorn": INFO
+  "sqlalchemy.engine": INFO
+  "sqlalchemy.pool": INFO
+  "asyncio": INFO
+  "botocore": INFO
+  "aiobotocore": INFO

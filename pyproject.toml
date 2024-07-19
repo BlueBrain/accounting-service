@@ -13,6 +13,8 @@ dependencies = [
     "asyncpg",
     "botocore",
     "fastapi",
+    "loguru",
+    "loguru-config",
     "pydantic>=2",
     "pydantic-settings>=2.2.1",
     "sqlalchemy",
@@ -33,6 +35,7 @@ dev = [
     "pytest",
     "pytest-asyncio<0.22",  # https://github.com/pytest-dev/pytest-asyncio/issues/706
     "pytest-cov",
+    "pytest-loguru",
     "ruff",
     "types-PyYAML",
 ]
@@ -52,6 +55,7 @@ ignore = [
     "CPY001",  # Missing copyright notice at top of file
     "ISC001",  # single line implicit string concatenation (disabling suggested by ruff formatter)
     "N802",    # function name should be lowercase
+    "PLE1205", # Too many arguments for `logging` format string
     "RUF029",  # Function is declared `async`, but doesn't `await` or use `async` features.
     "S104",    # Possible binding to all interfaces
     "FIX002",  # Line contains TODO, consider resolving the issue

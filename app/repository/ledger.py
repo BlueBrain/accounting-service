@@ -9,10 +9,8 @@ from sqlalchemy import func, true
 
 from app.constants import D0, AccountType, TransactionType
 from app.db.model import Account, Journal, Ledger
-from app.logger import get_logger
+from app.logger import L
 from app.repository.base import BaseRepository
-
-L = get_logger(__name__)
 
 
 class LedgerRepository(BaseRepository):
@@ -30,7 +28,7 @@ class LedgerRepository(BaseRepository):
     ) -> None:
         """Insert a transaction into journal and ledger, and update the balance accordingly."""
         if amount <= 0:
-            L.warning("Negative transaction amount: %s", amount)
+            L.warning("Negative transaction amount: {}", amount)
         query = (
             sa.insert(Journal)
             .values(

@@ -10,11 +10,8 @@ from sqlalchemy.dialects import postgresql as pg
 
 from app.constants import ServiceType
 from app.db.model import Job
-from app.logger import get_logger
 from app.repository.base import BaseRepository
 from app.schema.domain import StartedJob
-
-L = get_logger(__name__)
 
 
 class JobRepository(BaseRepository):

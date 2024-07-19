@@ -7,11 +7,8 @@ from sqlalchemy import and_, true
 
 from app.constants import AccountType
 from app.db.model import Account
-from app.logger import get_logger
 from app.repository.base import BaseRepository
 from app.schema.domain import Accounts, ProjAccount, RsvAccount, SysAccount, VlabAccount
-
-L = get_logger(__name__)
 
 
 class AccountRepository(BaseRepository):

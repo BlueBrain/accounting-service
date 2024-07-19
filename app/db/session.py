@@ -5,9 +5,7 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from app.logger import get_logger
-
-L = get_logger(__name__)
+from app.logger import L
 
 
 class DatabaseSessionManager:

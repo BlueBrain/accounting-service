@@ -6,12 +6,10 @@ from typing import Any
 
 from app.constants import D0, TransactionType
 from app.db.utils import try_nested
-from app.logger import get_logger
+from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeStorageResult, StartedJob
 from app.utils import utcnow
-
-L = get_logger(__name__)
 
 
 def _get_price_per_gb_per_day() -> Decimal:
@@ -37,7 +35,7 @@ async def _charge_one(
     total_seconds = (charging_at - (job.last_charged_at or job.started_at)).total_seconds()
     if not job.finished_at and total_seconds < min_charging_interval:
         L.debug(
-            "Not charging job %s: elapsed seconds since last charge: %.3f",
+            "Not charging job {}: elapsed seconds since last charge: {:.3f}",
             job.id,
             total_seconds,
         )
@@ -50,7 +48,7 @@ async def _charge_one(
     )
     if not job.finished_at and abs(amount) < min_charging_amount:
         L.debug(
-            "Not charging job %s: calculated amount too low: %.6f",
+            "Not charging job {}: calculated amount too low: {:.6f}",
             job.id,
             amount,
         )
@@ -88,7 +86,7 @@ async def charge_storage_jobs(
     """
 
     def _on_error() -> None:
-        L.exception("Error processing storage job %s", job.id)
+        L.exception("Error processing storage job {}", job.id)
         result.failure += 1
 
     def _on_success() -> None:

@@ -4,13 +4,11 @@ from datetime import datetime
 
 from app.constants import D0, TransactionType
 from app.db.utils import try_nested
-from app.logger import get_logger
+from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeShortJobsResult, StartedJob
 from app.service.pricing import calculate_running_cost
 from app.utils import utcnow
-
-L = get_logger(__name__)
 
 
 async def _charge_generic(
@@ -87,7 +85,7 @@ async def charge_short_jobs(repos: RepositoryGroup) -> ChargeShortJobsResult:
     """
 
     def _on_error() -> None:
-        L.exception("Error processing short job %s", job.id)
+        L.exception("Error processing short job {}", job.id)
         result.failure += 1
 
     def _on_success() -> None:

@@ -14,16 +14,14 @@ from starlette.responses import JSONResponse
 from app.api import router
 from app.config import settings
 from app.errors import ApiError
-from app.logger import get_logger
-
-L = get_logger(__name__)
+from app.logger import L
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[dict[str, Any]]:
     """Execute actions on server startup and shutdown."""
     L.info(
-        "Starting application [PID=%s, CPU_COUNT=%s, ENVIRONMENT=%s]",
+        "Starting application [PID={}, CPU_COUNT={}, ENVIRONMENT={}]",
         os.getpid(),
         os.cpu_count(),
         settings.ENVIRONMENT,
@@ -32,7 +30,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[dict[str, Any]]:
         yield {}
     except asyncio.CancelledError as err:
         # this can happen if the task is cancelled without sending SIGINT
-        L.info("Ignored %r in lifespan", err)
+        L.info("Ignored {} in lifespan", err)
     finally:
         L.info("Stopping application")
 
