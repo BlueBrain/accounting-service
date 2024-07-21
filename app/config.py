@@ -2,7 +2,8 @@
 
 from decimal import Decimal
 
-from pydantic import PostgresDsn
+from pydantic import PostgresDsn, field_validator
+from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,7 +25,27 @@ class Settings(BaseSettings):
     UVICORN_PORT: int = 8000
 
     CORS_ORIGINS: list[str] = ["*"]
-    LOGGING_CONFIG: str = "app/data/logging.yaml"
+
+    LOG_LEVEL: str = "DEBUG"
+    LOG_FORMAT: str = (
+        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+        "<level>{level: <8}</level> | "
+        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    )
+    LOG_SERIALIZE: bool = True
+    LOG_BACKTRACE: bool = False
+    LOG_DIAGNOSE: bool = False
+    LOG_ENQUEUE: bool = False
+    LOG_CATCH: bool = True
+    LOG_STANDARD_LEVELS: dict[str, str] = {
+        "": "WARNING",
+        "uvicorn": "INFO",
+        "sqlalchemy.engine": "INFO",
+        "sqlalchemy.pool": "INFO",
+        "asyncio": "INFO",
+        "botocore": "INFO",
+        "aiobotocore": "INFO",
+    }
 
     CHARGE_STORAGE_LOOP_SLEEP: float = 60
     CHARGE_STORAGE_ERROR_SLEEP: float = 60

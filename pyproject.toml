@@ -14,7 +14,6 @@ dependencies = [
     "botocore",
     "fastapi",
     "loguru",
-    "loguru-config",
     "pydantic>=2",
     "pydantic-settings>=2.2.1",
     "sqlalchemy",

@@ -22,6 +22,7 @@ services:
     - AWS_RETRY_MODE=standard
     - APP_DEBUG=true
     - PYTHONASYNCIODEBUG=1
+    - LOG_SERIALIZE=false
     develop:
       watch:
       - action: sync+restart

@@ -42,7 +42,7 @@ class QueueConsumer(ABC):
         self._queue_name = queue_name
         self._initial_delay = initial_delay
         self._create_sqs_client = create_sqs_client or create_default_sqs_client
-        self.logger = L.bind(name=name, class_name=self.__class__.__name__, queue=queue_name)
+        self.logger = L.bind(name=name, queue=queue_name)
 
     @property
     def name(self) -> str:

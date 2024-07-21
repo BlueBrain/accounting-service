@@ -3,15 +3,15 @@
 import inspect
 import json
 import logging
+import sys
 import traceback
-from pathlib import Path
 
 import loguru
-import yaml
-from loguru import logger as L  # noqa: N812
-from loguru_config import LoguruConfig
+from loguru import logger
 
 from app.config import settings
+
+L = logger
 
 
 class InterceptHandler(logging.Handler):
@@ -41,6 +41,7 @@ class InterceptHandler(logging.Handler):
 def json_formatter(record: "loguru.Record") -> str:
     """Format a log record including only a subset of fields.
 
+    Return the string to be formatted, not the actual message to be logged.
     See https://loguru.readthedocs.io/en/stable/resources/recipes.html.
     """
 
@@ -62,26 +63,38 @@ def json_formatter(record: "loguru.Record") -> str:
         }
         return json.dumps(subset, separators=(",", ":"), default=str)
 
-    # Return the string to be formatted, not the actual message to be logged
     record["extra"]["serialized"] = _serialize(record)
     return "{extra[serialized]}\n"
 
 
-def configure_logging() -> list[int] | None:
-    """Configure logging.
+def str_formatter(record: "loguru.Record") -> str:
+    """Format a log record including the extra parameters if present.
 
-    Returns:
-        A list containing the identifiers of added sinks (if any).
+    Return the string to be formatted, not the actual message to be logged.
     """
-    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
-    path = Path(__file__).parents[1] / settings.LOGGING_CONFIG
-    if not path.is_file():
-        L.warning("Logging not configured, the config file {} doesn't exist", path)
-        return None
-    config_dict = yaml.safe_load(path.read_bytes())
-    for logger_name, logger_level in config_dict.pop("standard_loggers", {}).items():
+    extras = (
+        f""" [{"|".join(f"{k}={{extra[{k}]}}" for k in record["extra"])}]"""
+        if record["extra"]
+        else ""
+    )
+    return f"{settings.LOG_FORMAT}{extras}\n{{exception}}"
+
+
+def configure_logging() -> int:
+    """Configure logging."""
+    logging.basicConfig(handlers=[InterceptHandler()], level=logging.NOTSET, force=True)
+    for logger_name, logger_level in settings.LOG_STANDARD_LEVELS.items():
         logging.getLogger(logger_name).setLevel(logger_level)
-    config = LoguruConfig.load(config_dict, configure=False)
-    ids = config.parse().configure()
+    L.remove()
+    handler_id = L.add(
+        sink=sys.stderr,
+        level=settings.LOG_LEVEL,
+        format=json_formatter if settings.LOG_SERIALIZE else str_formatter,
+        backtrace=settings.LOG_BACKTRACE,
+        diagnose=settings.LOG_DIAGNOSE,
+        enqueue=settings.LOG_ENQUEUE,
+        catch=settings.LOG_CATCH,
+    )
+    L.enable("app")
     L.info("Logging configured")
-    return ids
+    return handler_id

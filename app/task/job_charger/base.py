@@ -26,7 +26,7 @@ class BaseTask(ABC):
         self._error_sleep = error_sleep
         self._success = 0
         self._failure = 0
-        self.logger = L.bind(name=name, class_name=self.__class__.__name__)
+        self.logger = L.bind(name=name)
 
     @property
     def name(self) -> str:
