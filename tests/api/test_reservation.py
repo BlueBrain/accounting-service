@@ -14,7 +14,7 @@ async def test_make_short_jobs_reservation(api_client, mock_uuid):
         "subtype": "ml_queries",
         "count": "1",
     }
-    response = await api_client.post("/api/reservation/short_jobs", json=request_payload)
+    response = await api_client.post("/api/reservation/short-jobs", json=request_payload)
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
@@ -33,7 +33,7 @@ async def test_make_short_jobs_reservation(api_client, mock_uuid):
         "subtype": "ml_queries",
         "count": "40",
     }
-    response = await api_client.post("/api/reservation/short_jobs", json=request_payload)
+    response = await api_client.post("/api/reservation/short-jobs", json=request_payload)
 
     assert response.json() == {
         "job_id": None,
@@ -55,7 +55,7 @@ async def test_make_long_jobs_reservation(api_client, mock_uuid):
         "instances": "1",
         "instance_type": "",
     }
-    response = await api_client.post("/api/reservation/long_jobs", json=request_payload)
+    response = await api_client.post("/api/reservation/long-jobs", json=request_payload)
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
@@ -75,7 +75,7 @@ async def test_make_long_jobs_reservation(api_client, mock_uuid):
         "instances": "4",
         "instance_type": "",
     }
-    response = await api_client.post("/api/reservation/long_jobs", json=request_payload)
+    response = await api_client.post("/api/reservation/long-jobs", json=request_payload)
 
     assert response.json() == {
         "job_id": None,

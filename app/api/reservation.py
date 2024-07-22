@@ -13,7 +13,7 @@ from app.service import reservation
 router = APIRouter()
 
 
-@router.post("/short_jobs")
+@router.post("/short-jobs")
 async def make_short_jobs_reservation(
     repos: RepoGroupDep,
     reservation_request: ShortJobsReservationRequest,
@@ -22,7 +22,7 @@ async def make_short_jobs_reservation(
     return await reservation.make_short_jobs_reservation(repos, reservation_request)
 
 
-@router.post("/long_jobs")
+@router.post("/long-jobs")
 async def make_long_jobs_reservation(
     repos: RepoGroupDep,
     reservation_request: LongJobsReservationRequest,
