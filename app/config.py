@@ -2,8 +2,7 @@
 
 from decimal import Decimal
 
-from pydantic import PostgresDsn, field_validator
-from pydantic_core.core_schema import ValidationInfo
+from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
