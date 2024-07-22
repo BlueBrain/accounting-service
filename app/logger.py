@@ -82,9 +82,6 @@ def str_formatter(record: "loguru.Record") -> str:
 
 def configure_logging() -> int:
     """Configure logging."""
-    logging.basicConfig(handlers=[InterceptHandler()], level=logging.NOTSET, force=True)
-    for logger_name, logger_level in settings.LOG_STANDARD_LEVELS.items():
-        logging.getLogger(logger_name).setLevel(logger_level)
     L.remove()
     handler_id = L.add(
         sink=sys.stderr,
@@ -96,5 +93,9 @@ def configure_logging() -> int:
         catch=settings.LOG_CATCH,
     )
     L.enable("app")
+    logging.basicConfig(handlers=[InterceptHandler()], level=logging.NOTSET, force=True)
+    for logger_name, logger_level in settings.LOG_STANDARD_LOGGER.items():
+        L.info("Setting standard logger level: {}={}", logger_name, logger_level)
+        logging.getLogger(logger_name).setLevel(logger_level)
     L.info("Logging configured")
     return handler_id

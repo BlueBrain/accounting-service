@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        env_nested_delimiter="__",
         case_sensitive=True,
     )
 
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = ["*"]
 
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
@@ -37,15 +38,7 @@ class Settings(BaseSettings):
     LOG_DIAGNOSE: bool = False
     LOG_ENQUEUE: bool = False
     LOG_CATCH: bool = True
-    LOG_STANDARD_LEVELS: dict[str, str] = {
-        "": "WARNING",
-        "uvicorn": "INFO",
-        "sqlalchemy.engine": "INFO",
-        "sqlalchemy.pool": "INFO",
-        "asyncio": "INFO",
-        "botocore": "INFO",
-        "aiobotocore": "INFO",
-    }
+    LOG_STANDARD_LOGGER: dict[str, str] = {"root": "INFO"}
 
     CHARGE_STORAGE_LOOP_SLEEP: float = 60
     CHARGE_STORAGE_ERROR_SLEEP: float = 60

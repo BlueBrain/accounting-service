@@ -22,7 +22,13 @@ services:
     - AWS_RETRY_MODE=standard
     - APP_DEBUG=true
     - PYTHONASYNCIODEBUG=1
+    - LOG_LEVEL=DEBUG
     - LOG_SERIALIZE=false
+    - LOG_BACKTRACE=true
+    - LOG_DIAGNOSE=true
+    - LOG_STANDARD_LOGGER__root=INFO
+    - LOG_STANDARD_LOGGER__sqlalchemy.engine=INFO
+    - LOG_STANDARD_LOGGER__sqlalchemy.pool=INFO
     develop:
       watch:
       - action: sync+restart
