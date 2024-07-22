@@ -7,8 +7,10 @@ from sqlalchemy import and_, true
 
 from app.constants import AccountType
 from app.db.model import Account
+from app.logger import L
 from app.repository.base import BaseRepository
 from app.schema.domain import Accounts, ProjAccount, RsvAccount, SysAccount, VlabAccount
+from app.utils import create_uuid
 
 
 class AccountRepository(BaseRepository):
@@ -105,3 +107,43 @@ class AccountRepository(BaseRepository):
             vlab_id=proj.vlab_id, for_update=AccountType.VLAB in for_update
         )
         return Accounts(vlab=vlab, proj=proj, rsv=rsv)
+
+    async def _add_generic_account(self, **kwargs) -> Account:
+        L.warning("kwargs: {}", kwargs)
+        return (
+            await self.db.execute(sa.insert(Account).values(kwargs).returning(Account))
+        ).scalar_one()
+
+    async def add_sys_account(self, account_id: UUID, name: str) -> SysAccount:
+        """Add the system account. Only one system account is allowed."""
+        account = await self._add_generic_account(
+            account_type=AccountType.SYS,
+            id=account_id,
+            name=name,
+        )
+        return SysAccount.model_validate(account)
+
+    async def add_vlab_account(self, account_id: UUID, name: str) -> VlabAccount:
+        """Add a new virtual lab account."""
+        account = await self._add_generic_account(
+            account_type=AccountType.VLAB,
+            id=account_id,
+            name=name,
+        )
+        return VlabAccount.model_validate(account)
+
+    async def add_proj_account(self, account_id: UUID, name: str, vlab_id: UUID) -> ProjAccount:
+        """Add a new project account."""
+        account = await self._add_generic_account(
+            account_type=AccountType.PROJ,
+            id=account_id,
+            name=name,
+            parent_id=vlab_id,
+        )
+        await self._add_generic_account(
+            account_type=AccountType.RSV,
+            id=create_uuid(),
+            name=f"{name}/RESERVATION",
+            parent_id=account_id,
+        )
+        return ProjAccount.model_validate(account)

@@ -2,7 +2,8 @@
 
 from decimal import Decimal
 
-from pydantic import PostgresDsn
+from pydantic import PostgresDsn, field_validator
+from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -63,22 +64,28 @@ class Settings(BaseSettings):
     DB_HOST: str = "db"
     DB_PORT: int = 5432
     DB_NAME: str = "accounting_service"
+    DB_URI: str = ""
 
     DB_POOL_SIZE: int = 30
     DB_POOL_PRE_PING: bool = True
     DB_MAX_OVERFLOW: int = 0
 
-    @property
-    def DB_URI(self) -> str:
-        """Return the db uri built from the parameters."""
-        return PostgresDsn.build(
-            scheme=self.DB_ENGINE,
-            username=self.DB_USER,
-            password=self.DB_PASS,
-            host=self.DB_HOST,
-            port=self.DB_PORT,
-            path=self.DB_NAME,
-        ).unicode_string()
+    @field_validator("DB_URI", mode="before")
+    @classmethod
+    def build_db_uri(cls, v: str, info: ValidationInfo) -> str:
+        """Return the configured db uri, or build it from the parameters."""
+        if v:
+            dsn = PostgresDsn(v)
+        else:
+            dsn = PostgresDsn.build(
+                scheme=info.data["DB_ENGINE"],
+                username=info.data["DB_USER"],
+                password=info.data["DB_PASS"],
+                host=info.data["DB_HOST"],
+                port=info.data["DB_PORT"],
+                path=info.data["DB_NAME"],
+            )
+        return dsn.unicode_string()
 
 
 settings = Settings()

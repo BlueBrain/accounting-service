@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.constants import ServiceType
+from app.constants import D0, ServiceType
 
 
 class BaseAccount(BaseModel):
@@ -17,8 +17,8 @@ class BaseAccount(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     name: str
-    balance: Decimal
-    enabled: bool
+    balance: Decimal = D0
+    enabled: bool = True
 
 
 class SysAccount(BaseAccount):

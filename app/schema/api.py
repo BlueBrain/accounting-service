@@ -39,3 +39,46 @@ class ReservationResponse(BaseModel):
     requested_amount: Decimal
     available_amount: Decimal
     job_id: UUID | None = None
+
+
+class SysAccountCreationRequest(BaseModel):
+    """SysAccountCreationRequest."""
+
+    id: UUID
+    name: str
+
+
+class VlabAccountCreationRequest(BaseModel):
+    """VlabAccountCreationRequest."""
+
+    id: UUID
+    name: str
+
+
+class ProjAccountCreationRequest(BaseModel):
+    """ProjAccountCreationRequest."""
+
+    id: UUID
+    name: str
+    vlab_id: UUID
+
+
+class SysAccountCreationResponse(BaseModel):
+    """Response returned when creating the system account."""
+
+    id: UUID
+    name: str
+
+
+class VlabAccountCreationResponse(BaseModel):
+    """Response returned when creating a new virtual lab."""
+
+    id: UUID
+    name: str
+
+
+class ProjAccountCreationResponse(BaseModel):
+    """Response returned when creating a new project."""
+
+    id: UUID
+    name: str

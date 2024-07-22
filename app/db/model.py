@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any, ClassVar
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Identity, SmallInteger, text, true
+from sqlalchemy import DateTime, ForeignKey, Identity, Index, SmallInteger, text, true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -101,3 +101,11 @@ class Ledger(Base):
     journal_id: Mapped[BIGINT] = mapped_column(ForeignKey("journal.id"))
     amount: Mapped[Decimal]
     created_at: Mapped[CREATED_AT]
+
+
+Index(
+    "only_one_system_account",
+    Account.account_type,
+    unique=True,
+    postgresql_where=Account.account_type == AccountType.SYS,
+)
