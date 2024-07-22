@@ -45,11 +45,11 @@ def json_formatter(record: "loguru.Record") -> str:
     See https://loguru.readthedocs.io/en/stable/resources/recipes.html.
     """
 
-    def _exception_to_dict(ex: "loguru.RecordException") -> dict[str, str | None]:
+    def _format_exception(ex: "loguru.RecordException") -> dict[str, str | None]:
         return {
             "type": ex.type.__name__ if ex.type else None,
             "value": str(ex.value) if ex.value else None,
-            "traceback": "".join(traceback.format_tb(ex.traceback)),
+            "traceback": "".join(traceback.format_exception(ex.type, ex.value, ex.traceback)),
         }
 
     def _serialize(rec: "loguru.Record") -> str:
@@ -59,7 +59,7 @@ def json_formatter(record: "loguru.Record") -> str:
             "name": rec["name"],
             "message": rec["message"],
             "extra": rec["extra"],
-            "exception": _exception_to_dict(rec["exception"]) if rec["exception"] else None,
+            "exception": _format_exception(rec["exception"]) if rec["exception"] else None,
         }
         return json.dumps(subset, separators=(",", ":"), default=str)
 
