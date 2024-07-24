@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     UVICORN_PORT: int = 8000
 
-    ROOT_PATH: str = "/"
+    ROOT_PATH: str = ""
 
     CORS_ORIGINS: list[str] = ["*"]
 
