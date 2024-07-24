@@ -47,6 +47,7 @@ app = FastAPI(
     debug=settings.APP_DEBUG,
     lifespan=lifespan,
     exception_handlers={ApiError: api_error_handler},
+    root_path=settings.ROOT_PATH,
 )
 app.add_middleware(
     CORSMiddleware,
