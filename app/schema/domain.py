@@ -58,8 +58,7 @@ class BaseJob(BaseModel):
     proj_id: UUID
     service_type: ServiceType
     service_subtype: str | None
-    reserved_units: int
-    units: int
+    usage_value: int
     reserved_at: datetime | None
     started_at: datetime | None
     last_alive_at: datetime | None

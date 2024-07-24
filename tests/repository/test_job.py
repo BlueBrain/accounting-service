@@ -15,7 +15,7 @@ async def test_insert_job(db):
         proj_id=UUID("759bb837-4fac-46e8-9ea4-ed98c68c0fb9"),
         service_type=ServiceType.STORAGE,
         service_subtype="",
-        reserved_units=1234,
+        usage_value=1234,
         started_at=started_at,
         finished_at=None,
         properties=None,

@@ -36,8 +36,7 @@ class StorageQueueConsumer(QueueConsumer):
             proj_id=accounts.proj.id,
             service_type=event.type,
             service_subtype=event.subtype,
-            reserved_units=event.size,
-            units=event.size,
+            usage_value=event.size,
             started_at=event.timestamp,
             last_alive_at=event.timestamp,
         )

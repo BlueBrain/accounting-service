@@ -35,14 +35,14 @@ async def _charge_generic(
         )
         return
     instances = int((job.properties or {}).get("instances", 1))
-    units_to_be_charged = int(total_seconds * instances)
+    value_to_be_charged = int(total_seconds * instances)
     system_account = await repos.account.get_system_account()
     accounts = await repos.account.get_accounts_by_proj_id(proj_id=job.proj_id)
     running_amount_to_be_charged = await calculate_running_cost(
         vlab_id=accounts.vlab.id,
         service_type=job.service_type,
         service_subtype=job.service_subtype,
-        units=units_to_be_charged,
+        usage_value=value_to_be_charged,
     )
     fixed_amount_to_be_charged = (
         await calculate_fixed_cost(
@@ -121,7 +121,7 @@ async def _charge_generic(
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
         last_charged_at=charge_to,
-        units=Job.units + units_to_be_charged,
+        usage_value=Job.usage_value + value_to_be_charged,
     )
 
 

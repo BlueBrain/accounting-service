@@ -44,7 +44,7 @@ async def _charge_one(
     accounts = await repos.account.get_accounts_by_proj_id(proj_id=job.proj_id)
     amount = _get_amount(
         total_seconds=total_seconds,
-        total_bytes=job.units,
+        total_bytes=job.usage_value,
     )
     if not job.finished_at and abs(amount) < min_charging_amount:
         L.debug(

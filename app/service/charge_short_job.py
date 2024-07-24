@@ -24,7 +24,7 @@ async def _charge_generic(
         vlab_id=accounts.vlab.id,
         service_type=job.service_type,
         service_subtype=job.service_subtype,
-        units=job.units,
+        usage_value=job.usage_value,
     )
     remaining_reservation = await repos.ledger.get_remaining_reservation_for_job(
         job_id=job.id, account_id=accounts.rsv.id

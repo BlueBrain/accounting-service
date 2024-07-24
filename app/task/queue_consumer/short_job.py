@@ -39,7 +39,7 @@ class ShortJobQueueConsumer(QueueConsumer):
                 ("proj_id", job.proj_id == accounts.proj.id),
                 ("service_type", job.service_type == event.type),
                 ("service_subtype", job.service_subtype == event.subtype),
-                ("reserved_units", job.reserved_units == event.count),
+                ("usage_value", job.usage_value == event.count),
             ]
             if not value
         }:
@@ -53,6 +53,6 @@ class ShortJobQueueConsumer(QueueConsumer):
             started_at=event.timestamp,
             last_alive_at=event.timestamp,
             finished_at=event.timestamp,
-            units=event.count,
+            usage_value=event.count,
         )
         return result.id

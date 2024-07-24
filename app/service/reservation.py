@@ -16,7 +16,7 @@ from app.utils import create_uuid, utcnow
 async def _make_reservation(
     repos: RepositoryGroup,
     reservation_request: ReservationRequest,
-    reserved_units: int,
+    usage_value: int,
 ) -> ReservationResponse:
     """Make the job reservation."""
     # retrieve the accounts while locking the project account against concurrent updates
@@ -28,7 +28,7 @@ async def _make_reservation(
         vlab_id=accounts.vlab.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,
-        units=reserved_units,
+        usage_value=usage_value,
     )
     if requested_amount > available_amount:
         L.info(
@@ -50,7 +50,7 @@ async def _make_reservation(
         proj_id=accounts.proj.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,
-        reserved_units=reserved_units,
+        usage_value=usage_value,
         reserved_at=now,
         properties=None,
     )
@@ -83,8 +83,8 @@ async def make_short_job_reservation(
     reservation_request: ShortJobReservationRequest,
 ) -> ReservationResponse:
     """Make a new reservation for a short job."""
-    units = reservation_request.count
-    return await _make_reservation(repos, reservation_request, reserved_units=units)
+    usage_value = reservation_request.count
+    return await _make_reservation(repos, reservation_request, usage_value=usage_value)
 
 
 async def make_long_job_reservation(
@@ -93,5 +93,5 @@ async def make_long_job_reservation(
 ) -> ReservationResponse:
     """Make a new reservation for a long job."""
     requested_time = 10  # TODO: define the logic to calculate the requested time and cost
-    units = reservation_request.instances * requested_time
-    return await _make_reservation(repos, reservation_request, reserved_units=units)
+    usage_value = reservation_request.instances * requested_time
+    return await _make_reservation(repos, reservation_request, usage_value=usage_value)

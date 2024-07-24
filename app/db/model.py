@@ -50,8 +50,7 @@ class Job(Base):
     proj_id: Mapped[UUID] = mapped_column(index=True)
     service_type: Mapped[ServiceType]
     service_subtype: Mapped[str | None]
-    reserved_units: Mapped[BIGINT] = mapped_column(server_default=text("0"))
-    units: Mapped[BIGINT] = mapped_column(server_default=text("0"))
+    usage_value: Mapped[BIGINT] = mapped_column(server_default=text("0"))
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
     reserved_at: Mapped[datetime | None]

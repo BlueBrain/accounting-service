@@ -103,5 +103,5 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     assert records[0].service_type == "storage"
     assert records[0].vlab_id == UUID(VLAB_ID)
     assert records[0].proj_id == UUID(PROJ_ID)
-    assert records[0].units == 1073741824
+    assert records[0].usage_value == 1073741824
     assert records[0].started_at == datetime.fromtimestamp(1719477803.993, tz=UTC)

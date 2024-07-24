@@ -11,7 +11,7 @@ from app.utils import create_uuid, utcnow
 from tests.constants import GB, PROJ_ID, VLAB_ID
 
 
-async def _insert_job(db, job_id, units, started_at):
+async def _insert_job(db, job_id, usage_value, started_at):
     await db.execute(
         sa.insert(Job).values(
             [
@@ -20,7 +20,7 @@ async def _insert_job(db, job_id, units, started_at):
                     "vlab_id": VLAB_ID,
                     "proj_id": PROJ_ID,
                     "service_type": ServiceType.STORAGE,
-                    "units": int(units),
+                    "usage_value": int(usage_value),
                     "started_at": started_at,
                     "last_alive_at": started_at,
                     "last_charged_at": None,
@@ -55,7 +55,7 @@ async def test_charge_storage(db):
     # new job
     job_id = create_uuid()
     now = utcnow()
-    await _insert_job(db, job_id, units=1 * GB, started_at=now)
+    await _insert_job(db, job_id, usage_value=1 * GB, started_at=now)
 
     job = await _select_job(db, job_id)
     assert job.last_charged_at is None
@@ -78,7 +78,7 @@ async def test_charge_storage(db):
     # transitioning job
     job_id = create_uuid()
     now = utcnow()
-    await _insert_job(db, job_id, units=1.5 * GB, started_at=now)
+    await _insert_job(db, job_id, usage_value=1.5 * GB, started_at=now)
 
     job = await _select_job(db, job_id)
     assert job.last_charged_at is None
