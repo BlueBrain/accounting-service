@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/")
 async def root() -> Response:
     """Root endpoint."""
-    return RedirectResponse(url="/docs", status_code=HTTP_302_FOUND)
+    return RedirectResponse(url=f"{settings.ROOT_PATH}/docs", status_code=HTTP_302_FOUND)
 
 
 @router.get("/health")

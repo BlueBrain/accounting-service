@@ -1,8 +1,11 @@
+from app.config import settings
+
+
 async def test_root(api_client):
     response = await api_client.get("/", follow_redirects=False)
 
     assert response.status_code == 302
-    assert response.next_request.url.path == "/docs"
+    assert response.next_request.url.path == f"{settings.ROOT_PATH}/docs"
 
 
 async def test_health(api_client):
