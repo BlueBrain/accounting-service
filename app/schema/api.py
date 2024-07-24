@@ -1,10 +1,10 @@
 """Api schema."""
 
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.constants import ServiceType
 
@@ -21,14 +21,14 @@ class ShortJobReservationRequest(ReservationRequest):
     """ShortJobReservationRequest."""
 
     type: Literal[ServiceType.SHORT_JOB]
-    count: int
+    count: Annotated[int, Field(ge=1)]
 
 
 class LongJobReservationRequest(ReservationRequest):
     """LongJobReservationRequest."""
 
     type: Literal[ServiceType.LONG_JOB]
-    instances: int = 1
+    instances: Annotated[int, Field(ge=1)]
     instance_type: str | None = None
 
 

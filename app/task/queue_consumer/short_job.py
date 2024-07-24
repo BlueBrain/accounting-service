@@ -53,5 +53,6 @@ class ShortJobQueueConsumer(QueueConsumer):
             started_at=event.timestamp,
             last_alive_at=event.timestamp,
             finished_at=event.timestamp,
+            units=event.count,
         )
         return result.id

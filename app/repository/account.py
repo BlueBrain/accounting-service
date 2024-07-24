@@ -109,7 +109,6 @@ class AccountRepository(BaseRepository):
         return Accounts(vlab=vlab, proj=proj, rsv=rsv)
 
     async def _add_generic_account(self, **kwargs) -> Account:
-        L.warning("kwargs: {}", kwargs)
         return (
             await self.db.execute(sa.insert(Account).values(kwargs).returning(Account))
         ).scalar_one()

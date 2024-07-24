@@ -23,7 +23,7 @@ class LedgerRepository(BaseRepository):
         credited_to: UUID,
         transaction_datetime: datetime,
         transaction_type: TransactionType,
-        job_id: UUID | None,
+        job_id: UUID | None = None,
         properties: dict | None = None,
     ) -> None:
         """Insert a transaction into journal and ledger, and update the balance accordingly."""
