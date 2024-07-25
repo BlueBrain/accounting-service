@@ -51,7 +51,9 @@ class TransactionType(HyphenatedStrEnum):
     """Transaction Type."""
 
     TOP_UP = auto()  # from SYS to VLAB
-    ASSIGN = auto()  # from VLAB to PROJ, or from PROJ to VLAB
+    ASSIGN_BUDGET = auto()  # from VLAB to PROJ
+    REVERSE_BUDGET = auto()  # from PROJ to VLAB
+    MOVE_BUDGET = auto()  # from PROJ to PROJ
     RESERVE = auto()  # from PROJ to RSV
     RELEASE = auto()  # from RSV to PROJ
     CHARGE_SHORT_JOB = auto()  # from RSV to SYS, or from PROJ to SYS

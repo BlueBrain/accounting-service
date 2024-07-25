@@ -17,7 +17,7 @@ from app.config import settings
 from app.db.model import Account
 from app.db.session import database_session_manager
 
-from tests.constants import PROJ_ID, RSV_ID, SYS_ID, VLAB_ID
+from tests.constants import PROJ_ID, PROJ_ID_2, RSV_ID, RSV_ID_2, SYS_ID, VLAB_ID
 from tests.utils import truncate_tables
 
 
@@ -105,28 +105,42 @@ async def _db_account(db):
                     "account_type": "SYS",
                     "parent_id": None,
                     "name": "OBP",
-                    "balance": -1000,
+                    "balance": -2000,
                 },
                 {
                     "id": VLAB_ID,
                     "account_type": "VLAB",
                     "parent_id": None,
-                    "name": "Test virtual lab",
-                    "balance": 500,
+                    "name": "Test vlab_01",
+                    "balance": 1000,
                 },
                 {
                     "id": PROJ_ID,
                     "account_type": "PROJ",
                     "parent_id": VLAB_ID,
-                    "name": "Test project",
+                    "name": "Test vlab_01/proj_01",
                     "balance": 400,
                 },
                 {
                     "id": RSV_ID,
                     "account_type": "RSV",
                     "parent_id": PROJ_ID,
-                    "name": "Test reservation",
+                    "name": "Test vlab_01/proj_01/RESERVATION",
                     "balance": 100,
+                },
+                {
+                    "id": PROJ_ID_2,
+                    "account_type": "PROJ",
+                    "parent_id": VLAB_ID,
+                    "name": "Test vlab_01/proj_02",
+                    "balance": 500,
+                },
+                {
+                    "id": RSV_ID_2,
+                    "account_type": "RSV",
+                    "parent_id": PROJ_ID_2,
+                    "name": "Test vlab_01/proj_02/RESERVATION",
+                    "balance": 0,
                 },
             ],
         )

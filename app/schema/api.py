@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.constants import ServiceType
+from app.constants import D0, ServiceType
 
 
 class ReservationRequest(BaseModel):
@@ -21,14 +21,14 @@ class ShortJobReservationRequest(ReservationRequest):
     """ShortJobReservationRequest."""
 
     type: Literal[ServiceType.SHORT_JOB]
-    count: Annotated[int, Field(ge=1)]
+    count: Annotated[int, Field(gt=0)]
 
 
 class LongJobReservationRequest(ReservationRequest):
     """LongJobReservationRequest."""
 
     type: Literal[ServiceType.LONG_JOB]
-    instances: Annotated[int, Field(ge=1)]
+    instances: Annotated[int, Field(gt=0)]
     instance_type: str | None = None
 
 
@@ -82,3 +82,35 @@ class ProjAccountCreationResponse(BaseModel):
 
     id: UUID
     name: str
+
+
+class TopUpRequest(BaseModel):
+    """TopUpRequest."""
+
+    vlab_id: UUID
+    amount: Annotated[Decimal, Field(gt=D0)]
+
+
+class AssignBudgetRequest(BaseModel):
+    """AssignBudgetRequest."""
+
+    vlab_id: UUID
+    proj_id: UUID
+    amount: Annotated[Decimal, Field(gt=D0)]
+
+
+class ReverseBudgetRequest(BaseModel):
+    """ReverseBudgetRequest."""
+
+    vlab_id: UUID
+    proj_id: UUID
+    amount: Annotated[Decimal, Field(gt=D0)]
+
+
+class MoveBudgetRequest(BaseModel):
+    """MoveBudgetRequest."""
+
+    vlab_id: UUID
+    debited_from: UUID
+    credited_to: UUID
+    amount: Annotated[Decimal, Field(gt=D0)]
