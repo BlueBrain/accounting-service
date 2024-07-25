@@ -15,6 +15,7 @@ from app.api import router
 from app.config import settings
 from app.errors import ApiError
 from app.logger import L
+from app.schema.api import ErrorResponse
 
 
 @asynccontextmanager
@@ -35,11 +36,17 @@ async def lifespan(_: FastAPI) -> AsyncIterator[dict[str, Any]]:
         L.info("Stopping application")
 
 
-async def api_error_handler(_: Request, exc: ApiError) -> JSONResponse:
+async def api_error_handler(request: Request, exception: ApiError) -> JSONResponse:
     """Handle API errors to be returned to the client."""
-    msg = f"{exc.__class__.__name__}: {exc}"
-    L.warning(msg)
-    return JSONResponse(status_code=exc.status_code, content={"message": msg})
+    L.error("API error in {} {}: {!r}", request.method, request.url, exception)
+    return JSONResponse(
+        status_code=int(exception.http_status_code),
+        content=ErrorResponse(
+            message=exception.message,
+            error_code=exception.error_code,
+            details=exception.details,
+        ).model_dump(),
+    )
 
 
 app = FastAPI(

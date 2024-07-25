@@ -1,28 +1,21 @@
 """Constants module."""
 
 from decimal import Decimal
-from enum import StrEnum, auto
+from enum import auto
+
+from app.enum import HyphenStrEnum
 
 D0 = Decimal(0)
 
 
-class HyphenatedStrEnum(StrEnum):
-    """Enum where members are also (and must be) strings."""
-
-    @staticmethod
-    def _generate_next_value_(name: str, start: int, count: int, last_values: list[str]) -> str:  # noqa: ARG004
-        """Return the hyphenated lower-cased version of the member name."""
-        return name.lower().replace("_", "-")
-
-
-class EventStatus(HyphenatedStrEnum):
+class EventStatus(HyphenStrEnum):
     """Queue Message Status."""
 
     COMPLETED = auto()
     FAILED = auto()
 
 
-class ServiceType(HyphenatedStrEnum):
+class ServiceType(HyphenStrEnum):
     """Service Type."""
 
     STORAGE = auto()
@@ -30,7 +23,7 @@ class ServiceType(HyphenatedStrEnum):
     LONG_JOB = auto()
 
 
-class LongJobStatus(HyphenatedStrEnum):
+class LongJobStatus(HyphenStrEnum):
     """Long Job Status."""
 
     STARTED = auto()
@@ -38,7 +31,7 @@ class LongJobStatus(HyphenatedStrEnum):
     FINISHED = auto()
 
 
-class AccountType(HyphenatedStrEnum):
+class AccountType(HyphenStrEnum):
     """Account Type."""
 
     SYS = auto()
@@ -47,7 +40,7 @@ class AccountType(HyphenatedStrEnum):
     RSV = auto()
 
 
-class TransactionType(HyphenatedStrEnum):
+class TransactionType(HyphenStrEnum):
     """Transaction Type."""
 
     TOP_UP = auto()  # from SYS to VLAB

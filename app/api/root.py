@@ -5,7 +5,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.status import HTTP_302_FOUND
 
 from app.config import settings
-from app.errors import ApiError
+from app.errors import ApiError, ApiErrorCode
 
 router = APIRouter()
 
@@ -37,5 +37,7 @@ async def version() -> dict:
 @router.get("/error", include_in_schema=False)
 async def error() -> None:
     """Error endpoint to test generic error responses."""
-    msg = "Generic error returned for testing purposes"
-    raise ApiError(msg)
+    raise ApiError(
+        message="Generic error returned for testing purposes",
+        error_code=ApiErrorCode.INVALID_REQUEST,
+    )

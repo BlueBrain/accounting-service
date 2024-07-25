@@ -30,4 +30,8 @@ async def test_error(api_client):
     response = await api_client.get("/error")
 
     assert response.status_code == 400
-    assert response.json() == {"message": "ApiError: Generic error returned for testing purposes"}
+    assert response.json() == {
+        "error_code": "INVALID_REQUEST",
+        "message": "Generic error returned for testing purposes",
+        "details": None,
+    }

@@ -7,6 +7,15 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from app.constants import D0, ServiceType
+from app.errors import ApiErrorCode
+
+
+class ErrorResponse(BaseModel):
+    """ErrorResponse."""
+
+    error_code: ApiErrorCode
+    message: str
+    details: str | None = None
 
 
 class ReservationRequest(BaseModel):
