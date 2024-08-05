@@ -111,10 +111,10 @@ class JobRepository(BaseRepository):
         rows = (await self.db.execute(query)).scalars().all()
         return [StartedJob.model_validate(row) for row in rows]
 
-    async def get_long_jobs_to_be_charged(
+    async def get_longrun_to_be_charged(
         self, *, proj_ids: list[UUID] | None = None
     ) -> list[StartedJob]:
-        """Get the long jobs to be charged.
+        """Get the longrun jobs to be charged.
 
         Return the jobs started having last_charged_at != finished_at,
         or where last_charged_at and/or finished_at are null.
@@ -123,7 +123,7 @@ class JobRepository(BaseRepository):
         during the transaction, the records will be selected again in the next round.
         """
         query = sa.select(Job).where(
-            Job.service_type == ServiceType.LONG_JOB,
+            Job.service_type == ServiceType.LONGRUN,
             Job.started_at != null(),
             or_(
                 Job.last_charged_at != Job.finished_at,
@@ -135,12 +135,12 @@ class JobRepository(BaseRepository):
         rows = (await self.db.execute(query)).scalars().all()
         return [StartedJob.model_validate(row) for row in rows]
 
-    async def get_short_jobs_to_be_charged(
+    async def get_oneshot_to_be_charged(
         self, *, proj_ids: list[UUID] | None = None
     ) -> list[StartedJob]:
-        """Get the short jobs to be charged."""
+        """Get the oneshot jobs to be charged."""
         query = sa.select(Job).where(
-            Job.service_type == ServiceType.SHORT_JOB,
+            Job.service_type == ServiceType.ONESHOT,
             Job.started_at != null(),
             Job.finished_at != null(),
             Job.last_charged_at == null(),

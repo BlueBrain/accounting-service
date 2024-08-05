@@ -4,28 +4,28 @@ from fastapi import APIRouter
 
 from app.dependencies import RepoGroupDep
 from app.schema.api import (
-    LongJobReservationRequest,
+    LongrunReservationRequest,
+    OneshotReservationRequest,
     ReservationResponse,
-    ShortJobReservationRequest,
 )
 from app.service import reservation
 
 router = APIRouter()
 
 
-@router.post("/short-job")
-async def make_short_job_reservation(
+@router.post("/oneshot")
+async def make_oneshot_reservation(
     repos: RepoGroupDep,
-    reservation_request: ShortJobReservationRequest,
+    reservation_request: OneshotReservationRequest,
 ) -> ReservationResponse:
-    """Make a new reservation for a short job."""
-    return await reservation.make_short_job_reservation(repos, reservation_request)
+    """Make a new reservation for oneshot job."""
+    return await reservation.make_oneshot_reservation(repos, reservation_request)
 
 
-@router.post("/long-job")
-async def make_long_job_reservation(
+@router.post("/longrun")
+async def make_longrun_reservation(
     repos: RepoGroupDep,
-    reservation_request: LongJobReservationRequest,
+    reservation_request: LongrunReservationRequest,
 ) -> ReservationResponse:
-    """Make a new reservation for a long job."""
-    return await reservation.make_long_job_reservation(repos, reservation_request)
+    """Make a new reservation for longrun job."""
+    return await reservation.make_longrun_reservation(repos, reservation_request)

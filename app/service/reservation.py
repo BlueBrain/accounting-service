@@ -4,10 +4,10 @@ from app.constants import AccountType, TransactionType
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.api import (
-    LongJobReservationRequest,
+    LongrunReservationRequest,
+    OneshotReservationRequest,
     ReservationRequest,
     ReservationResponse,
-    ShortJobReservationRequest,
 )
 from app.service.pricing import calculate_running_cost
 from app.utils import create_uuid, utcnow
@@ -78,20 +78,20 @@ async def _make_reservation(
     )
 
 
-async def make_short_job_reservation(
+async def make_oneshot_reservation(
     repos: RepositoryGroup,
-    reservation_request: ShortJobReservationRequest,
+    reservation_request: OneshotReservationRequest,
 ) -> ReservationResponse:
-    """Make a new reservation for a short job."""
+    """Make a new reservation for oneshot job."""
     usage_value = reservation_request.count
     return await _make_reservation(repos, reservation_request, usage_value=usage_value)
 
 
-async def make_long_job_reservation(
+async def make_longrun_reservation(
     repos: RepositoryGroup,
-    reservation_request: LongJobReservationRequest,
+    reservation_request: LongrunReservationRequest,
 ) -> ReservationResponse:
-    """Make a new reservation for a long job."""
+    """Make a new reservation for longrun job."""
     requested_time = 10  # TODO: define the logic to calculate the requested time and cost
     usage_value = reservation_request.instances * requested_time
     return await _make_reservation(repos, reservation_request, usage_value=usage_value)

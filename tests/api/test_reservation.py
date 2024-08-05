@@ -6,15 +6,15 @@ from tests.constants import PROJ_ID
 
 
 @pytest.mark.usefixtures("_db_account")
-async def test_make_short_job_reservation(api_client, mock_uuid):
+async def test_make_oneshot_reservation(api_client, mock_uuid):
     # make a valid reservation
     request_payload = {
         "proj_id": PROJ_ID,
-        "type": ServiceType.SHORT_JOB,
+        "type": ServiceType.ONESHOT,
         "subtype": "ml_queries",
         "count": "1",
     }
-    response = await api_client.post("/api/reservation/short-job", json=request_payload)
+    response = await api_client.post("/api/reservation/oneshot", json=request_payload)
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
@@ -29,11 +29,11 @@ async def test_make_short_job_reservation(api_client, mock_uuid):
     # try to make a new reservation with insufficient funds because of the previous reservation
     request_payload = {
         "proj_id": PROJ_ID,
-        "type": ServiceType.SHORT_JOB,
+        "type": ServiceType.ONESHOT,
         "subtype": "ml_queries",
         "count": "40",
     }
-    response = await api_client.post("/api/reservation/short-job", json=request_payload)
+    response = await api_client.post("/api/reservation/oneshot", json=request_payload)
 
     assert response.json() == {
         "job_id": None,
@@ -46,16 +46,16 @@ async def test_make_short_job_reservation(api_client, mock_uuid):
 
 
 @pytest.mark.usefixtures("_db_account")
-async def test_make_long_job_reservation(api_client, mock_uuid):
+async def test_make_longrun_reservation(api_client, mock_uuid):
     # make a valid reservation
     request_payload = {
         "proj_id": PROJ_ID,
-        "type": ServiceType.LONG_JOB,
+        "type": ServiceType.LONGRUN,
         "subtype": "single_cell_sim",
         "instances": "1",
         "instance_type": "",
     }
-    response = await api_client.post("/api/reservation/long-job", json=request_payload)
+    response = await api_client.post("/api/reservation/longrun", json=request_payload)
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
@@ -70,12 +70,12 @@ async def test_make_long_job_reservation(api_client, mock_uuid):
     # try to make a new reservation with insufficient funds because of the previous reservation
     request_payload = {
         "proj_id": PROJ_ID,
-        "type": ServiceType.LONG_JOB,
+        "type": ServiceType.LONGRUN,
         "subtype": "single_cell_sim",
         "instances": "4",
         "instance_type": "",
     }
-    response = await api_client.post("/api/reservation/long-job", json=request_payload)
+    response = await api_client.post("/api/reservation/longrun", json=request_payload)
 
     assert response.json() == {
         "job_id": None,

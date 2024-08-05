@@ -26,17 +26,17 @@ class ReservationRequest(BaseModel):
     subtype: str | None = None
 
 
-class ShortJobReservationRequest(ReservationRequest):
-    """ShortJobReservationRequest."""
+class OneshotReservationRequest(ReservationRequest):
+    """OneshotReservationRequest."""
 
-    type: Literal[ServiceType.SHORT_JOB]
+    type: Literal[ServiceType.ONESHOT]
     count: Annotated[int, Field(gt=0)]
 
 
-class LongJobReservationRequest(ReservationRequest):
-    """LongJobReservationRequest."""
+class LongrunReservationRequest(ReservationRequest):
+    """LongrunReservationRequest."""
 
-    type: Literal[ServiceType.LONG_JOB]
+    type: Literal[ServiceType.LONGRUN]
     instances: Annotated[int, Field(gt=0)]
     instance_type: str | None = None
 

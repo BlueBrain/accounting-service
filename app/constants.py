@@ -19,12 +19,12 @@ class ServiceType(HyphenStrEnum):
     """Service Type."""
 
     STORAGE = auto()
-    SHORT_JOB = auto()
-    LONG_JOB = auto()
+    ONESHOT = auto()
+    LONGRUN = auto()
 
 
-class LongJobStatus(HyphenStrEnum):
-    """Long Job Status."""
+class LongrunStatus(HyphenStrEnum):
+    """Longrun Status."""
 
     STARTED = auto()
     RUNNING = auto()
@@ -49,7 +49,7 @@ class TransactionType(HyphenStrEnum):
     MOVE_BUDGET = auto()  # from PROJ to PROJ
     RESERVE = auto()  # from PROJ to RSV
     RELEASE = auto()  # from RSV to PROJ
-    CHARGE_SHORT_JOB = auto()  # from RSV to SYS, or from PROJ to SYS
-    CHARGE_LONG_JOB = auto()  # from RSV to SYS, or from PROJ to SYS
+    CHARGE_ONESHOT = auto()  # from RSV to SYS, or from PROJ to SYS
+    CHARGE_LONGRUN = auto()  # from RSV to SYS, or from PROJ to SYS
     CHARGE_STORAGE = auto()  # from RSV to SYS, or from PROJ to SYS
     REFUND = auto()  # from SYS to PROJ

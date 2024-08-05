@@ -9,11 +9,11 @@ import uvloop
 from app.config import settings
 from app.db.session import database_session_manager
 from app.logger import configure_logging
-from app.task.job_charger.long_job import PeriodicLongJobCharger
-from app.task.job_charger.short_job import PeriodicShortJobCharger
+from app.task.job_charger.longrun import PeriodicLongrunCharger
+from app.task.job_charger.oneshot import PeriodicOneshotCharger
 from app.task.job_charger.storage import PeriodicStorageCharger
-from app.task.queue_consumer.long_job import LongJobQueueConsumer
-from app.task.queue_consumer.short_job import ShortJobQueueConsumer
+from app.task.queue_consumer.longrun import LongrunQueueConsumer
+from app.task.queue_consumer.oneshot import OneshotQueueConsumer
 from app.task.queue_consumer.storage import StorageQueueConsumer
 
 
@@ -35,14 +35,14 @@ async def main() -> None:
             log_config=None,
         )
     )
-    long_job_consumer = LongJobQueueConsumer(
-        name="long-job-consumer",
-        queue_name=settings.SQS_LONG_JOB_QUEUE_NAME,
+    longrun_consumer = LongrunQueueConsumer(
+        name="longrun-consumer",
+        queue_name=settings.SQS_LONGRUN_QUEUE_NAME,
         initial_delay=1,
     )
-    short_job_consumer = ShortJobQueueConsumer(
-        name="short-job-consumer",
-        queue_name=settings.SQS_SHORT_JOB_QUEUE_NAME,
+    oneshot_consumer = OneshotQueueConsumer(
+        name="oneshot-consumer",
+        queue_name=settings.SQS_ONESHOT_QUEUE_NAME,
         initial_delay=2,
     )
     storage_consumer = StorageQueueConsumer(
@@ -50,16 +50,16 @@ async def main() -> None:
         queue_name=settings.SQS_STORAGE_QUEUE_NAME,
         initial_delay=3,
     )
-    long_job_charger = PeriodicLongJobCharger(name="long-job-charger", initial_delay=4)
-    short_job_charger = PeriodicShortJobCharger(name="short-job-charger", initial_delay=5)
+    longrun_charger = PeriodicLongrunCharger(name="longrun-charger", initial_delay=4)
+    oneshot_charger = PeriodicOneshotCharger(name="oneshot-charger", initial_delay=5)
     storage_charger = PeriodicStorageCharger(name="storage-charger", initial_delay=6)
     try:
         async with asyncio.TaskGroup() as tg:
-            tg.create_task(long_job_consumer.run_forever(), name=long_job_consumer.name)
-            tg.create_task(short_job_consumer.run_forever(), name=short_job_consumer.name)
+            tg.create_task(longrun_consumer.run_forever(), name=longrun_consumer.name)
+            tg.create_task(oneshot_consumer.run_forever(), name=oneshot_consumer.name)
             tg.create_task(storage_consumer.run_forever(), name=storage_consumer.name)
-            tg.create_task(long_job_charger.run_forever(), name=long_job_charger.name)
-            tg.create_task(short_job_charger.run_forever(), name=short_job_charger.name)
+            tg.create_task(longrun_charger.run_forever(), name=longrun_charger.name)
+            tg.create_task(oneshot_charger.run_forever(), name=oneshot_charger.name)
             tg.create_task(storage_charger.run_forever(), name=storage_charger.name)
             tg.create_task(server.serve(), name="uvicorn")
     finally:

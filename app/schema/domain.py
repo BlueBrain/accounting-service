@@ -75,8 +75,8 @@ class StartedJob(BaseJob):
 
 
 @dataclass(kw_only=True)
-class ChargeLongJobResult:
-    """Result of charge_long_job."""
+class ChargeLongrunResult:
+    """Result of charge_longrun."""
 
     unfinished_uncharged: int = 0
     unfinished_charged: int = 0
@@ -87,8 +87,8 @@ class ChargeLongJobResult:
 
 
 @dataclass(kw_only=True)
-class ChargeShortJobResult:
-    """Result of charge_short_job."""
+class ChargeOneshotResult:
+    """Result of charge_oneshot."""
 
     success: int = 0
     failure: int = 0

@@ -1,4 +1,4 @@
-"""Charge for short jobs."""
+"""Charge for oneshot jobs."""
 
 from datetime import datetime
 
@@ -6,7 +6,7 @@ from app.constants import D0, TransactionType
 from app.db.utils import try_nested
 from app.logger import L
 from app.repository.group import RepositoryGroup
-from app.schema.domain import ChargeShortJobResult, StartedJob
+from app.schema.domain import ChargeOneshotResult, StartedJob
 from app.service.pricing import calculate_running_cost
 from app.utils import utcnow
 
@@ -44,7 +44,7 @@ async def _charge_generic(
             debited_from=accounts.rsv.id,
             credited_to=system_account.id,
             transaction_datetime=last_charged_at,
-            transaction_type=TransactionType.CHARGE_SHORT_JOB,
+            transaction_type=TransactionType.CHARGE_ONESHOT,
             job_id=job.id,
             properties={"reason": f"{reason}:charge_reservation"},
         )
@@ -54,7 +54,7 @@ async def _charge_generic(
             debited_from=accounts.proj.id,
             credited_to=system_account.id,
             transaction_datetime=last_charged_at,
-            transaction_type=TransactionType.CHARGE_SHORT_JOB,
+            transaction_type=TransactionType.CHARGE_ONESHOT,
             job_id=job.id,
             properties={"reason": f"{reason}:charge_project"},
         )
@@ -76,8 +76,8 @@ async def _charge_generic(
     )
 
 
-async def charge_short_job(repos: RepositoryGroup) -> ChargeShortJobResult:
-    """Charge for short jobs.
+async def charge_oneshot(repos: RepositoryGroup) -> ChargeOneshotResult:
+    """Charge for oneshot jobs.
 
     Args:
         repos: repository group instance.
@@ -85,15 +85,15 @@ async def charge_short_job(repos: RepositoryGroup) -> ChargeShortJobResult:
     """
 
     def _on_error() -> None:
-        L.exception("Error processing short job {}", job.id)
+        L.exception("Error processing oneshot job {}", job.id)
         result.failure += 1
 
     def _on_success() -> None:
         result.success += 1
 
     now = utcnow()
-    result = ChargeShortJobResult()
-    jobs = await repos.job.get_short_jobs_to_be_charged()
+    result = ChargeOneshotResult()
+    jobs = await repos.job.get_oneshot_to_be_charged()
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error, on_success=_on_success):
             await _charge_generic(repos, job, last_charged_at=now, reason="finished_uncharged")

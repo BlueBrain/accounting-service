@@ -1,4 +1,4 @@
-"""Charge for long jobs."""
+"""Charge for longrun jobs."""
 
 from datetime import datetime
 from decimal import Decimal
@@ -8,7 +8,7 @@ from app.db.model import Job
 from app.db.utils import try_nested
 from app.logger import L
 from app.repository.group import RepositoryGroup
-from app.schema.domain import ChargeLongJobResult, StartedJob
+from app.schema.domain import ChargeLongrunResult, StartedJob
 from app.service.pricing import calculate_fixed_cost, calculate_running_cost
 from app.utils import utcnow
 
@@ -82,7 +82,7 @@ async def _charge_generic(
             debited_from=accounts.rsv.id,
             credited_to=system_account.id,
             transaction_datetime=now,
-            transaction_type=TransactionType.CHARGE_LONG_JOB,
+            transaction_type=TransactionType.CHARGE_LONGRUN,
             job_id=job.id,
             properties={"reason": f"{reason}:charge_reservation"},
         )
@@ -92,7 +92,7 @@ async def _charge_generic(
             debited_from=accounts.proj.id,
             credited_to=system_account.id,
             transaction_datetime=now,
-            transaction_type=TransactionType.CHARGE_LONG_JOB,
+            transaction_type=TransactionType.CHARGE_LONGRUN,
             job_id=job.id,
             properties={"reason": f"{reason}:charge_project"},
         )
@@ -125,12 +125,12 @@ async def _charge_generic(
     )
 
 
-async def charge_long_job(
+async def charge_longrun(
     repos: RepositoryGroup,
     min_charging_interval: float = 0.0,
     min_charging_amount: Decimal = D0,
-) -> ChargeLongJobResult:
-    """Charge for long jobs.
+) -> ChargeLongrunResult:
+    """Charge for longrun jobs.
 
     Args:
         repos: repository group instance.
@@ -141,12 +141,12 @@ async def charge_long_job(
     """
 
     def _on_error() -> None:
-        L.exception("Error processing long job {}", job.id)
+        L.exception("Error processing longrun job {}", job.id)
         result.failure += 1
 
     now = utcnow()
-    result = ChargeLongJobResult()
-    jobs = await repos.job.get_long_jobs_to_be_charged()
+    result = ChargeLongrunResult()
+    jobs = await repos.job.get_longrun_to_be_charged()
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error):
             match job:

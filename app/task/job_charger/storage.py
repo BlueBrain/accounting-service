@@ -15,8 +15,8 @@ class PeriodicStorageCharger(BaseTask):
         super().__init__(
             name=name,
             initial_delay=initial_delay,
-            loop_sleep=settings.CHARGE_LONG_JOB_LOOP_SLEEP,
-            error_sleep=settings.CHARGE_LONG_JOB_ERROR_SLEEP,
+            loop_sleep=settings.CHARGE_LONGRUN_LOOP_SLEEP,
+            error_sleep=settings.CHARGE_LONGRUN_ERROR_SLEEP,
         )
 
     async def _run_once(self) -> None:  # noqa: PLR6301

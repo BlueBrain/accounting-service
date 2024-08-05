@@ -1,4 +1,4 @@
-"""Short job consumer module."""
+"""Oneshot job consumer module."""
 
 from typing import Any
 from uuid import UUID
@@ -8,17 +8,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.constants import AccountType
 from app.errors import EventError
 from app.repository.group import RepositoryGroup
-from app.schema.queue import ShortJobEvent
+from app.schema.queue import OneshotEvent
 from app.task.queue_consumer.base import QueueConsumer
 
 
-class ShortJobQueueConsumer(QueueConsumer):
-    """Short job queue consumer."""
+class OneshotQueueConsumer(QueueConsumer):
+    """Oneshot queue consumer."""
 
     async def _consume(self, msg: dict[str, Any], db: AsyncSession) -> UUID:
         """Consume the message."""
         self.logger.info("Message received: {}", msg)
-        event = ShortJobEvent.model_validate_json(msg["Body"])
+        event = OneshotEvent.model_validate_json(msg["Body"])
         repos = RepositoryGroup(db=db)
 
         accounts = await repos.account.get_accounts_by_proj_id(
