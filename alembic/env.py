@@ -20,7 +20,8 @@ L = logging.getLogger("alembic.env")
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", settings.DB_URI)
+# use a %% to escape the % sign (% is the only character that needs to be escaped)
+config.set_main_option("sqlalchemy.url", settings.DB_URI.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
