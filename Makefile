@@ -31,11 +31,14 @@ lint:  ## Run linters
 	pdm run python -m ruff check
 	pdm run python -m mypy app
 
-build:  ## Build the docker images
+build:  ## Build the Docker image
 	docker compose build app
 
+publish:  ## Publish the Docker image to DockerHub
+	docker compose push --dry-run app
+
 run: export COMPOSE_PROFILES=run
-run: build  ## Run the application in docker
+run: build  ## Run the application in Docker
 	docker compose up --watch --remove-orphans
 
 kill: export COMPOSE_PROFILES=run,test
@@ -46,7 +49,7 @@ clean: export COMPOSE_PROFILES=run,test
 clean: ## Take down the application and remove the volumes and the images
 	docker compose down --remove-orphans --volumes --rmi all
 
-test: build  ## Run tests in docker
+test: build  ## Run tests in Docker
 	docker compose run --rm test
 
 test-local: export DB_HOST=127.0.0.1
