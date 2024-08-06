@@ -19,7 +19,5 @@ jobs:
         with:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build the Docker image
-        run: make build
-      - name: Publish the Docker image to DockerHub
+      - name: Build and publish the Docker image to DockerHub
         run: make publish
