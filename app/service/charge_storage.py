@@ -9,6 +9,8 @@ from app.db.utils import try_nested
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeStorageResult, StartedJob
+from app.service.price import calculate_cost
+from app.service.usage import calculate_storage_usage_value
 from app.utils import utcnow
 
 
@@ -32,34 +34,42 @@ async def _charge_one(
     properties: dict[str, Any] | None = None,
 ) -> None:
     charging_at = job.finished_at or utcnow()
-    total_seconds = (charging_at - (job.last_charged_at or job.started_at)).total_seconds()
+    charging_start = job.last_charged_at or job.started_at
+    total_seconds = int((charging_at - charging_start).total_seconds())
     if not job.finished_at and total_seconds < min_charging_interval:
         L.debug(
-            "Not charging job {}: elapsed seconds since last charge: {:.3f}",
+            "Not charging job {}: elapsed seconds since last charge: {}",
             job.id,
             total_seconds,
         )
         return
-    system_account = await repos.account.get_system_account()
     accounts = await repos.account.get_accounts_by_proj_id(proj_id=job.proj_id)
-    amount = _get_amount(
-        total_seconds=total_seconds,
-        total_bytes=job.usage_value,
+    price = await repos.price.get_price(
+        vlab_id=accounts.vlab.id,
+        service_type=job.service_type,
+        service_subtype=job.service_subtype,
+        usage_datetime=charging_at,
     )
-    if not job.finished_at and abs(amount) < min_charging_amount:
+    usage_value = calculate_storage_usage_value(
+        size=job.usage_params["size"],
+        duration=total_seconds,
+    )
+    total_amount = calculate_cost(price=price, usage_value=usage_value)
+    if not job.finished_at and abs(total_amount) < min_charging_amount:
         L.debug(
             "Not charging job {}: calculated amount too low: {:.6f}",
             job.id,
-            amount,
+            total_amount,
         )
         return
     await repos.ledger.insert_transaction(
-        amount=amount,
+        amount=total_amount,
         debited_from=accounts.proj.id,
-        credited_to=system_account.id,
+        credited_to=accounts.sys.id,
         transaction_datetime=charging_at,
         transaction_type=TransactionType.CHARGE_STORAGE,
         job_id=job.id,
+        price_id=price.id,
         properties=properties,
     )
     await repos.job.update_job(

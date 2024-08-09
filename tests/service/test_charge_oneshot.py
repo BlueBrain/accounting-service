@@ -1,7 +1,7 @@
 import pytest
 import sqlalchemy as sa
 
-from app.constants import ServiceType
+from app.constants import ServiceSubtype, ServiceType
 from app.db.model import Job, Journal, Ledger
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeOneshotResult
@@ -11,7 +11,7 @@ from app.utils import create_uuid, utcnow
 from tests.constants import PROJ_ID, VLAB_ID
 
 
-async def _insert_job(db, job_id, usage_value, started_at):
+async def _insert_job(db, job_id, count, started_at):
     await db.execute(
         sa.insert(Job).values(
             [
@@ -20,12 +20,13 @@ async def _insert_job(db, job_id, usage_value, started_at):
                     "vlab_id": VLAB_ID,
                     "proj_id": PROJ_ID,
                     "service_type": ServiceType.ONESHOT,
-                    "usage_value": int(usage_value),
+                    "service_subtype": ServiceSubtype.ML_LLM,
                     "started_at": started_at,
                     "last_alive_at": started_at,
                     "last_charged_at": None,
                     "finished_at": None,
                     "cancelled_at": None,
+                    "usage_params": {"count": int(count)},
                 }
             ],
         )
@@ -50,7 +51,7 @@ async def _select_ledger_rows(db, job_id):
     ).all()
 
 
-@pytest.mark.usefixtures("_db_account")
+@pytest.mark.usefixtures("_db_account", "_db_price")
 async def test_charge_oneshot(db):
     repos = RepositoryGroup(db)
 
@@ -60,7 +61,7 @@ async def test_charge_oneshot(db):
     # new job
     job_id = create_uuid()
     now = utcnow()
-    await _insert_job(db, job_id, usage_value=10, started_at=now)
+    await _insert_job(db, job_id, count=10, started_at=now)
 
     result = await test_module.charge_oneshot(repos)
     assert result == ChargeOneshotResult(success=0)

@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from decimal import Decimal
 from unittest.mock import patch
 from uuid import UUID
 
@@ -14,8 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application import app
 from app.config import settings
-from app.db.model import Account
+from app.constants import D0, ServiceSubtype, ServiceType
+from app.db.model import Account, Price
 from app.db.session import database_session_manager
+from app.utils import utcnow
 
 from tests.constants import PROJ_ID, PROJ_ID_2, RSV_ID, RSV_ID_2, SYS_ID, VLAB_ID
 from tests.utils import truncate_tables
@@ -141,6 +144,46 @@ async def _db_account(db):
                     "parent_id": PROJ_ID_2,
                     "name": "Test vlab_01/proj_02/RESERVATION",
                     "balance": 0,
+                },
+            ],
+        )
+    )
+    # commit b/c the test might be using a new transaction, for example when calling an endpoint
+    await db.commit()
+
+
+@pytest.fixture
+async def _db_price(db):
+    """Populate the price table."""
+    await db.execute(
+        sa.insert(Price).values(
+            [
+                {
+                    "service_type": ServiceType.STORAGE,
+                    "service_subtype": ServiceSubtype.STORAGE,
+                    "valid_from": utcnow(),
+                    "valid_to": None,
+                    "fixed_cost": D0,
+                    "multiplier": Decimal("0.001"),
+                    "vlab_id": None,
+                },
+                {
+                    "service_type": ServiceType.ONESHOT,
+                    "service_subtype": ServiceSubtype.ML_LLM,
+                    "valid_from": utcnow(),
+                    "valid_to": None,
+                    "fixed_cost": D0,
+                    "multiplier": Decimal("0.00001"),
+                    "vlab_id": None,
+                },
+                {
+                    "service_type": ServiceType.LONGRUN,
+                    "service_subtype": ServiceSubtype.SINGLE_CELL_SIM,
+                    "valid_from": utcnow(),
+                    "valid_to": None,
+                    "fixed_cost": Decimal("1.5"),
+                    "multiplier": Decimal("0.01"),
+                    "vlab_id": None,
                 },
             ],
         )

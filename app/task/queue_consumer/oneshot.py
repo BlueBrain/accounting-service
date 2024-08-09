@@ -39,7 +39,6 @@ class OneshotQueueConsumer(QueueConsumer):
                 ("proj_id", job.proj_id == accounts.proj.id),
                 ("service_type", job.service_type == event.type),
                 ("service_subtype", job.service_subtype == event.subtype),
-                ("usage_value", job.usage_value == event.count),
             ]
             if not value
         }:
@@ -53,6 +52,8 @@ class OneshotQueueConsumer(QueueConsumer):
             started_at=event.timestamp,
             last_alive_at=event.timestamp,
             finished_at=event.timestamp,
-            usage_value=event.count,
+            usage_params={
+                "count": event.count,
+            },
         )
         return result.id

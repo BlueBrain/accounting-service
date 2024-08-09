@@ -5,11 +5,11 @@ from decimal import Decimal
 from typing import Any, ClassVar
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Identity, Index, SmallInteger, text, true
+from sqlalchemy import DateTime, ForeignKey, Identity, Index, MetaData, SmallInteger, text, true
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from app.constants import AccountType, EventStatus, ServiceType, TransactionType
+from app.constants import AccountType, EventStatus, ServiceSubtype, ServiceType, TransactionType
 from app.db.types import BIGINT, CREATED_AT, UPDATED_AT
 
 
@@ -20,6 +20,16 @@ class Base(DeclarativeBase):
         datetime: DateTime(timezone=True),
         dict[str, Any]: JSONB,
     }
+    # See https://alembic.sqlalchemy.org/en/latest/naming.html
+    metadata = MetaData(
+        naming_convention={
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_%(constraint_name)s",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        }
+    )
 
 
 class Event(Base):
@@ -49,8 +59,7 @@ class Job(Base):
     vlab_id: Mapped[UUID] = mapped_column(index=True)
     proj_id: Mapped[UUID] = mapped_column(index=True)
     service_type: Mapped[ServiceType]
-    service_subtype: Mapped[str | None]
-    usage_value: Mapped[BIGINT] = mapped_column(server_default=text("0"))
+    service_subtype: Mapped[ServiceSubtype]
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
     reserved_at: Mapped[datetime | None]
@@ -59,7 +68,8 @@ class Job(Base):
     last_charged_at: Mapped[datetime | None]
     finished_at: Mapped[datetime | None]
     cancelled_at: Mapped[datetime | None]
-    properties: Mapped[dict[str, Any] | None]
+    reservation_params: Mapped[dict[str, Any]] = mapped_column(server_default="{}")
+    usage_params: Mapped[dict[str, Any]] = mapped_column(server_default="{}")
 
 
 class Account(Base):
@@ -86,6 +96,7 @@ class Journal(Base):
     transaction_datetime: Mapped[datetime]
     transaction_type: Mapped[TransactionType]
     job_id: Mapped[UUID | None] = mapped_column(ForeignKey("job.id"))
+    price_id: Mapped[BIGINT | None] = mapped_column(ForeignKey("price.id"))
     properties: Mapped[dict[str, Any] | None]
     created_at: Mapped[CREATED_AT]
 
@@ -100,6 +111,23 @@ class Ledger(Base):
     journal_id: Mapped[BIGINT] = mapped_column(ForeignKey("journal.id"))
     amount: Mapped[Decimal]
     created_at: Mapped[CREATED_AT]
+
+
+class Price(Base):
+    """Price table."""
+
+    __tablename__ = "price"
+
+    id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
+    service_type: Mapped[ServiceType]
+    service_subtype: Mapped[ServiceSubtype] = mapped_column(index=True)
+    valid_from: Mapped[datetime]
+    valid_to: Mapped[datetime | None]
+    fixed_cost: Mapped[Decimal]
+    multiplier: Mapped[Decimal]
+    vlab_id: Mapped[UUID | None] = mapped_column(index=True)
+    created_at: Mapped[CREATED_AT]
+    updated_at: Mapped[UPDATED_AT]
 
 
 Index(

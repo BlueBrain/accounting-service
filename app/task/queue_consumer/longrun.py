@@ -20,7 +20,10 @@ async def _handle_started(repos: RepositoryGroup, event: LongrunEvent, accounts:
         proj_id=accounts.proj.id,
         started_at=event.timestamp,
         last_alive_at=event.timestamp,
-        properties={"instance_type": event.instance_type},
+        usage_params={
+            "instances": event.instances,
+            "instance_type": event.instance_type,
+        },
     )
 
 

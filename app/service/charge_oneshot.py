@@ -7,34 +7,34 @@ from app.db.utils import try_nested
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeOneshotResult, StartedJob
-from app.service.pricing import calculate_running_cost
-from app.utils import utcnow
+from app.service.price import calculate_cost
+from app.service.usage import calculate_oneshot_usage_value
 
 
 async def _charge_generic(
     repos: RepositoryGroup,
     job: StartedJob,
     *,
-    last_charged_at: datetime,
+    charging_at: datetime,
     reason: str,
 ) -> None:
-    system_account = await repos.account.get_system_account()
     accounts = await repos.account.get_accounts_by_proj_id(proj_id=job.proj_id)
-    total_amount = await calculate_running_cost(
+    price = await repos.price.get_price(
         vlab_id=accounts.vlab.id,
         service_type=job.service_type,
         service_subtype=job.service_subtype,
-        usage_value=job.usage_value,
+        usage_datetime=job.reserved_at or job.started_at,
     )
-    remaining_reservation = await repos.ledger.get_remaining_reservation_for_job(
-        job_id=job.id, account_id=accounts.rsv.id
+    usage_value = calculate_oneshot_usage_value(
+        count=job.usage_params["count"],
     )
-    if remaining_reservation < 0:
-        err = f"Reservation for job {job.id} is negative: {remaining_reservation}"
-        raise RuntimeError(err)
+    total_amount = calculate_cost(price=price, usage_value=usage_value)
     if total_amount < 0:
         err = f"Total amount for job {job.id} is negative: {total_amount}"
         raise RuntimeError(err)
+    remaining_reservation = await repos.ledger.get_remaining_reservation_for_job(
+        job_id=job.id, account_id=accounts.rsv.id, raise_if_negative=True
+    )
     reservation_amount_to_be_charged = min(total_amount, remaining_reservation)
     project_amount_to_be_charged = max(total_amount - reservation_amount_to_be_charged, D0)
     remaining_reservation -= reservation_amount_to_be_charged
@@ -42,20 +42,22 @@ async def _charge_generic(
         await repos.ledger.insert_transaction(
             amount=reservation_amount_to_be_charged,
             debited_from=accounts.rsv.id,
-            credited_to=system_account.id,
-            transaction_datetime=last_charged_at,
+            credited_to=accounts.sys.id,
+            transaction_datetime=charging_at,
             transaction_type=TransactionType.CHARGE_ONESHOT,
             job_id=job.id,
+            price_id=price.id,
             properties={"reason": f"{reason}:charge_reservation"},
         )
     if project_amount_to_be_charged > 0:
         await repos.ledger.insert_transaction(
             amount=project_amount_to_be_charged,
             debited_from=accounts.proj.id,
-            credited_to=system_account.id,
-            transaction_datetime=last_charged_at,
+            credited_to=accounts.sys.id,
+            transaction_datetime=charging_at,
             transaction_type=TransactionType.CHARGE_ONESHOT,
             job_id=job.id,
+            price_id=price.id,
             properties={"reason": f"{reason}:charge_project"},
         )
     if remaining_reservation > 0:
@@ -63,16 +65,17 @@ async def _charge_generic(
             amount=remaining_reservation,
             debited_from=accounts.rsv.id,
             credited_to=accounts.proj.id,
-            transaction_datetime=last_charged_at,
+            transaction_datetime=charging_at,
             transaction_type=TransactionType.RELEASE,
             job_id=job.id,
+            price_id=price.id,
             properties={"reason": f"{reason}:release_reservation"},
         )
     await repos.job.update_job(
         job_id=job.id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
-        last_charged_at=last_charged_at,
+        last_charged_at=charging_at,
     )
 
 
@@ -91,10 +94,11 @@ async def charge_oneshot(repos: RepositoryGroup) -> ChargeOneshotResult:
     def _on_success() -> None:
         result.success += 1
 
-    now = utcnow()
     result = ChargeOneshotResult()
     jobs = await repos.job.get_oneshot_to_be_charged()
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error, on_success=_on_success):
-            await _charge_generic(repos, job, last_charged_at=now, reason="finished_uncharged")
+            await _charge_generic(
+                repos, job, charging_at=job.started_at, reason="finished_uncharged"
+            )
     return result

@@ -105,7 +105,8 @@ class AccountRepository(BaseRepository):
         vlab = await self.get_vlab_account(
             vlab_id=proj.vlab_id, for_update=AccountType.VLAB in for_update
         )
-        return Accounts(vlab=vlab, proj=proj, rsv=rsv)
+        sys = await self.get_system_account()
+        return Accounts(sys=sys, vlab=vlab, proj=proj, rsv=rsv)
 
     async def _add_generic_account(self, **kwargs) -> Account:
         return (

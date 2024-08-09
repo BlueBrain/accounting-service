@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.constants import D0, ServiceType
+from app.constants import D0, ServiceSubtype, ServiceType
 from app.errors import ApiErrorCode
 
 
@@ -23,21 +23,22 @@ class ReservationRequest(BaseModel):
 
     proj_id: UUID
     type: ServiceType
-    subtype: str | None = None
+    subtype: ServiceSubtype
 
 
 class OneshotReservationRequest(ReservationRequest):
     """OneshotReservationRequest."""
 
     type: Literal[ServiceType.ONESHOT]
-    count: Annotated[int, Field(gt=0)]
+    count: Annotated[int, Field(ge=0)]
 
 
 class LongrunReservationRequest(ReservationRequest):
     """LongrunReservationRequest."""
 
     type: Literal[ServiceType.LONGRUN]
-    instances: Annotated[int, Field(gt=0)]
+    duration: Annotated[int, Field(ge=0)]
+    instances: Annotated[int, Field(ge=0)]
     instance_type: str | None = None
 
 

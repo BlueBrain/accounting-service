@@ -1,5 +1,7 @@
 """Reservation service."""
 
+from typing import Any
+
 from app.constants import AccountType, TransactionType
 from app.logger import L
 from app.repository.group import RepositoryGroup
@@ -9,7 +11,8 @@ from app.schema.api import (
     ReservationRequest,
     ReservationResponse,
 )
-from app.service.pricing import calculate_running_cost
+from app.service.price import calculate_cost
+from app.service.usage import calculate_longrun_usage_value, calculate_oneshot_usage_value
 from app.utils import create_uuid, utcnow
 
 
@@ -17,19 +20,22 @@ async def _make_reservation(
     repos: RepositoryGroup,
     reservation_request: ReservationRequest,
     usage_value: int,
+    reservation_params: dict[str, Any],
 ) -> ReservationResponse:
     """Make the job reservation."""
+    reserving_at = utcnow()
     # retrieve the accounts while locking the project account against concurrent updates
     accounts = await repos.account.get_accounts_by_proj_id(
         proj_id=reservation_request.proj_id, for_update={AccountType.PROJ}
     )
     available_amount = accounts.proj.balance
-    requested_amount = await calculate_running_cost(
+    price = await repos.price.get_price(
         vlab_id=accounts.vlab.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,
-        usage_value=usage_value,
+        usage_datetime=reserving_at,
     )
+    requested_amount = calculate_cost(price=price, usage_value=usage_value)
     if requested_amount > available_amount:
         L.info(
             "Reservation not allowed for project {}: requested={}, available={}",
@@ -43,24 +49,23 @@ async def _make_reservation(
             available_amount=available_amount,
         )
     job_id = create_uuid()
-    now = utcnow()
     await repos.job.insert_job(
         job_id=job_id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
         service_type=reservation_request.type,
         service_subtype=reservation_request.subtype,
-        usage_value=usage_value,
-        reserved_at=now,
-        properties=None,
+        reserved_at=reserving_at,
+        reservation_params=reservation_params,
     )
     await repos.ledger.insert_transaction(
         amount=requested_amount,
         debited_from=accounts.proj.id,
         credited_to=accounts.rsv.id,
-        transaction_datetime=now,
+        transaction_datetime=reserving_at,
         transaction_type=TransactionType.RESERVE,
         job_id=job_id,
+        price_id=price.id,
         properties=None,
     )
     L.info(
@@ -83,8 +88,17 @@ async def make_oneshot_reservation(
     reservation_request: OneshotReservationRequest,
 ) -> ReservationResponse:
     """Make a new reservation for oneshot job."""
-    usage_value = reservation_request.count
-    return await _make_reservation(repos, reservation_request, usage_value=usage_value)
+    usage_value = calculate_oneshot_usage_value(
+        count=reservation_request.count,
+    )
+    return await _make_reservation(
+        repos,
+        reservation_request,
+        usage_value=usage_value,
+        reservation_params={
+            "count": reservation_request.count,
+        },
+    )
 
 
 async def make_longrun_reservation(
@@ -92,6 +106,18 @@ async def make_longrun_reservation(
     reservation_request: LongrunReservationRequest,
 ) -> ReservationResponse:
     """Make a new reservation for longrun job."""
-    requested_time = 10  # TODO: define the logic to calculate the requested time and cost
-    usage_value = reservation_request.instances * requested_time
-    return await _make_reservation(repos, reservation_request, usage_value=usage_value)
+    usage_value = calculate_longrun_usage_value(
+        instances=reservation_request.instances,
+        instance_type=reservation_request.instance_type,
+        duration=reservation_request.duration,
+    )
+    return await _make_reservation(
+        repos,
+        reservation_request,
+        usage_value=usage_value,
+        reservation_params={
+            "duration": reservation_request.duration,
+            "instances": reservation_request.instances,
+            "instance_type": reservation_request.instance_type,
+        },
+    )

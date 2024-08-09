@@ -24,6 +24,7 @@ class LedgerRepository(BaseRepository):
         transaction_datetime: datetime,
         transaction_type: TransactionType,
         job_id: UUID | None = None,
+        price_id: int | None = None,
         properties: dict | None = None,
     ) -> None:
         """Insert a transaction into journal and ledger, and update the balance accordingly."""
@@ -35,6 +36,7 @@ class LedgerRepository(BaseRepository):
                 transaction_datetime=transaction_datetime,
                 transaction_type=transaction_type,
                 job_id=job_id,
+                price_id=price_id,
                 properties=properties,
             )
             .returning(Journal.id)
@@ -73,7 +75,7 @@ class LedgerRepository(BaseRepository):
         ).one()
 
     async def get_remaining_reservation_for_job(
-        self, job_id: UUID, account_id: UUID | None = None
+        self, *, job_id: UUID, account_id: UUID | None = None, raise_if_negative: bool = True
     ) -> Decimal:
         """Return the remaining reservation amount for a specific job."""
         query = (
@@ -89,4 +91,8 @@ class LedgerRepository(BaseRepository):
                 (Ledger.account_id == account_id) if account_id else true(),
             )
         )
-        return (await self.db.execute(query)).scalar_one() or D0
+        result = (await self.db.execute(query)).scalar_one() or D0
+        if raise_if_negative and result < 0:
+            err = f"Reservation for job {job_id} is negative: {result}"
+            raise RuntimeError(err)
+        return result

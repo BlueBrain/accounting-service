@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, BeforeValidator, Field, validate_call
 
-from app.constants import LongrunStatus, ServiceType
+from app.constants import LongrunStatus, ServiceSubtype, ServiceType
 
 # min and max just ensure that the timestamp contains a reasonable value expressed in milliseconds
 MIN_TS = datetime(2024, 1, 1, tzinfo=UTC).timestamp() * 1000
@@ -26,9 +26,9 @@ class StorageEvent(BaseModel):
     """StorageEvent."""
 
     type: Literal[ServiceType.STORAGE]
-    subtype: str | None = None
+    subtype: Literal[ServiceSubtype.STORAGE] = ServiceSubtype.STORAGE
     proj_id: UUID
-    size: int
+    size: Annotated[int, Field(ge=0)]
     timestamp: TimeStamp
 
 
@@ -36,10 +36,10 @@ class OneshotEvent(BaseModel):
     """OneshotEvent."""
 
     type: Literal[ServiceType.ONESHOT]
-    subtype: str
+    subtype: ServiceSubtype
     proj_id: UUID
     job_id: UUID
-    count: int
+    count: Annotated[int, Field(ge=0)]
     timestamp: TimeStamp
 
 
@@ -47,10 +47,10 @@ class LongrunEvent(BaseModel):
     """LongrunEvent."""
 
     type: Literal[ServiceType.LONGRUN]
-    subtype: str
+    subtype: ServiceSubtype
     proj_id: UUID
     job_id: UUID
     status: LongrunStatus
-    instances: int | None = None
+    instances: Annotated[int | None, Field(ge=0)] = None
     instance_type: str | None = None
     timestamp: TimeStamp

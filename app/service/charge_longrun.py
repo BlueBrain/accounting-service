@@ -4,12 +4,12 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.constants import D0, TransactionType
-from app.db.model import Job
 from app.db.utils import try_nested
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeLongrunResult, StartedJob
-from app.service.pricing import calculate_fixed_cost, calculate_running_cost
+from app.service.price import calculate_cost
+from app.service.usage import calculate_longrun_usage_value
 from app.utils import utcnow
 
 
@@ -17,49 +17,40 @@ async def _charge_generic(
     repos: RepositoryGroup,
     job: StartedJob,
     *,
-    charge_from: datetime,
-    charge_to: datetime,
-    add_fixed_cost: bool,
+    charge_start: datetime,
+    charge_end: datetime,
+    include_fixed_cost: bool,
     release_reservation: bool,
     reason: str,
     min_charging_interval: float = 0.0,
     min_charging_amount: Decimal = D0,
 ) -> None:
     now = utcnow()
-    total_seconds = (charge_to - charge_from).total_seconds()
-    if 0 < total_seconds < min_charging_interval:
+    total_seconds = int((charge_end - charge_start).total_seconds())
+    if total_seconds < min_charging_interval:
         L.debug(
             "Not charging job {}: elapsed seconds since last charge: {:.3f}",
             job.id,
             total_seconds,
         )
         return
-    instances = int((job.properties or {}).get("instances", 1))
-    value_to_be_charged = int(total_seconds * instances)
-    system_account = await repos.account.get_system_account()
     accounts = await repos.account.get_accounts_by_proj_id(proj_id=job.proj_id)
-    running_amount_to_be_charged = await calculate_running_cost(
+    price = await repos.price.get_price(
         vlab_id=accounts.vlab.id,
         service_type=job.service_type,
         service_subtype=job.service_subtype,
-        usage_value=value_to_be_charged,
+        usage_datetime=job.reserved_at or job.started_at,
     )
-    fixed_amount_to_be_charged = (
-        await calculate_fixed_cost(
-            vlab_id=accounts.vlab.id,
-            service_type=job.service_type,
-            service_subtype=job.service_subtype,
-        )
-        if add_fixed_cost
-        else D0
+    usage_value = calculate_longrun_usage_value(
+        instances=job.usage_params["instances"],
+        instance_type=job.usage_params.get("instance_type"),
+        duration=total_seconds,
     )
-    remaining_reservation = await repos.ledger.get_remaining_reservation_for_job(
-        job_id=job.id, account_id=accounts.rsv.id
+    total_amount = calculate_cost(
+        price=price,
+        usage_value=usage_value,
+        include_fixed_cost=include_fixed_cost,
     )
-    if remaining_reservation < 0:
-        err = f"Reservation for job {job.id} is negative: {remaining_reservation}"
-        raise RuntimeError(err)
-    total_amount = running_amount_to_be_charged + fixed_amount_to_be_charged
     if abs(total_amount) < min_charging_amount:
         L.debug(
             "Not charging job {}: calculated amount too low: {:.6f}",
@@ -67,12 +58,15 @@ async def _charge_generic(
             total_amount,
         )
         return
+    remaining_reservation = await repos.ledger.get_remaining_reservation_for_job(
+        job_id=job.id, account_id=accounts.rsv.id, raise_if_negative=True
+    )
     if total_amount > 0:
         reservation_amount_to_be_charged = min(total_amount, remaining_reservation)
         project_amount_to_be_charged = max(total_amount - reservation_amount_to_be_charged, D0)
         remaining_reservation -= reservation_amount_to_be_charged
     else:
-        # the job has been previously overcharged
+        L.info("The job {} has been previously overcharged for {:.6f}", job.id, total_amount)
         reservation_amount_to_be_charged = D0
         project_amount_to_be_charged = total_amount
 
@@ -80,7 +74,7 @@ async def _charge_generic(
         await repos.ledger.insert_transaction(
             amount=reservation_amount_to_be_charged,
             debited_from=accounts.rsv.id,
-            credited_to=system_account.id,
+            credited_to=accounts.sys.id,
             transaction_datetime=now,
             transaction_type=TransactionType.CHARGE_LONGRUN,
             job_id=job.id,
@@ -90,7 +84,7 @@ async def _charge_generic(
         await repos.ledger.insert_transaction(
             amount=project_amount_to_be_charged,
             debited_from=accounts.proj.id,
-            credited_to=system_account.id,
+            credited_to=accounts.sys.id,
             transaction_datetime=now,
             transaction_type=TransactionType.CHARGE_LONGRUN,
             job_id=job.id,
@@ -99,7 +93,7 @@ async def _charge_generic(
     elif project_amount_to_be_charged < 0:
         await repos.ledger.insert_transaction(
             amount=project_amount_to_be_charged * -1,
-            debited_from=system_account.id,
+            debited_from=accounts.sys.id,
             credited_to=accounts.proj.id,
             transaction_datetime=now,
             transaction_type=TransactionType.REFUND,
@@ -120,8 +114,7 @@ async def _charge_generic(
         job_id=job.id,
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
-        last_charged_at=charge_to,
-        usage_value=Job.usage_value + value_to_be_charged,
+        last_charged_at=charge_end,
     )
 
 
@@ -155,9 +148,9 @@ async def charge_longrun(
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=job.started_at,
-                        charge_to=now,
-                        add_fixed_cost=True,
+                        charge_start=job.started_at,
+                        charge_end=now,
+                        include_fixed_cost=True,
                         release_reservation=False,
                         reason="unfinished_uncharged",
                         min_charging_interval=min_charging_interval,
@@ -169,9 +162,9 @@ async def charge_longrun(
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=last_charged_at,
-                        charge_to=now,
-                        add_fixed_cost=False,
+                        charge_start=last_charged_at,
+                        charge_end=now,
+                        include_fixed_cost=False,
                         release_reservation=False,
                         reason="unfinished_charged",
                         min_charging_interval=min_charging_interval,
@@ -184,9 +177,9 @@ async def charge_longrun(
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=job.started_at,
-                        charge_to=finished_at,
-                        add_fixed_cost=True,
+                        charge_start=job.started_at,
+                        charge_end=finished_at,
+                        include_fixed_cost=True,
                         release_reservation=True,
                         reason="finished_uncharged",
                     )
@@ -199,9 +192,9 @@ async def charge_longrun(
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=last_charged_at,
-                        charge_to=finished_at,
-                        add_fixed_cost=False,
+                        charge_start=last_charged_at,
+                        charge_end=finished_at,
+                        include_fixed_cost=False,
                         release_reservation=True,
                         reason="finished_charged",
                     )
@@ -216,9 +209,9 @@ async def charge_longrun(
                     await _charge_generic(
                         repos,
                         job,
-                        charge_from=last_charged_at,
-                        charge_to=finished_at,
-                        add_fixed_cost=False,
+                        charge_start=last_charged_at,
+                        charge_end=finished_at,
+                        include_fixed_cost=False,
                         release_reservation=True,
                         reason="finished_overcharged",
                     )

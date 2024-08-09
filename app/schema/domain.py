@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.constants import D0, ServiceType
+from app.constants import D0, ServiceSubtype, ServiceType
 
 
 class BaseAccount(BaseModel):
@@ -44,6 +44,7 @@ class RsvAccount(BaseAccount):
 class Accounts(BaseModel):
     """Accounts."""
 
+    sys: SysAccount
     vlab: VlabAccount
     proj: ProjAccount
     rsv: RsvAccount
@@ -57,14 +58,14 @@ class BaseJob(BaseModel):
     vlab_id: UUID
     proj_id: UUID
     service_type: ServiceType
-    service_subtype: str | None
-    usage_value: int
+    service_subtype: ServiceSubtype
     reserved_at: datetime | None
     started_at: datetime | None
     last_alive_at: datetime | None
     last_charged_at: datetime | None
     finished_at: datetime | None
-    properties: dict[str, Any] | None
+    reservation_params: dict[str, Any]
+    usage_params: dict[str, Any]
 
 
 class StartedJob(BaseJob):
