@@ -22,7 +22,7 @@ async def test_make_oneshot_reservation(api_client, mock_uuid):
         "requested_amount": "10.00000",
         "available_amount": "400",
     }
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert mock_uuid.call_count == 1
     mock_uuid.reset_mock()
 
@@ -41,7 +41,7 @@ async def test_make_oneshot_reservation(api_client, mock_uuid):
         "requested_amount": "400.00000",
         "available_amount": "390.00000",
     }
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert mock_uuid.call_count == 0
 
 
@@ -64,7 +64,7 @@ async def test_make_longrun_reservation(api_client, mock_uuid):
         "requested_amount": "73.50",
         "available_amount": "400",
     }
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert mock_uuid.call_count == 1
     mock_uuid.reset_mock()
 
@@ -85,5 +85,5 @@ async def test_make_longrun_reservation(api_client, mock_uuid):
         "requested_amount": "433.50",
         "available_amount": "326.50",
     }
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert mock_uuid.call_count == 0

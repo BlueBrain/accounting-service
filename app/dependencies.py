@@ -7,6 +7,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import database_session_manager
+from app.queue.session import SQSManager, sqs_manager
 from app.repository.group import RepositoryGroup
 
 
@@ -17,8 +18,15 @@ async def _database_session_factory() -> AsyncIterator[AsyncSession]:
 
 
 def _repo_group(db: "SessionDep") -> RepositoryGroup:
+    """Return the repository group, to be used as a dependency."""
     return RepositoryGroup(db=db)
+
+
+def _sqs_manager() -> SQSManager:
+    """Return the SQS manager."""
+    return sqs_manager
 
 
 SessionDep = Annotated[AsyncSession, Depends(_database_session_factory)]
 RepoGroupDep = Annotated[RepositoryGroup, Depends(_repo_group)]
+SQSManagerDep = Annotated[SQSManager, Depends(_sqs_manager)]

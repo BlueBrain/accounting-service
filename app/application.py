@@ -15,6 +15,7 @@ from app.api import router
 from app.config import settings
 from app.errors import ApiError
 from app.logger import L
+from app.queue.session import sqs_manager
 from app.schema.api import ErrorResponse
 
 
@@ -27,8 +28,17 @@ async def lifespan(_: FastAPI) -> AsyncIterator[dict[str, Any]]:
         os.cpu_count(),
         settings.ENVIRONMENT,
     )
+    sqs_manager.configure(
+        queue_names=[
+            settings.SQS_LONGRUN_QUEUE_NAME,
+            settings.SQS_ONESHOT_QUEUE_NAME,
+            settings.SQS_STORAGE_QUEUE_NAME,
+        ],
+        client_config=settings.SQS_CLIENT_CONFIG.model_dump(),
+    )
     try:
-        yield {}
+        async with sqs_manager:
+            yield {}
     except asyncio.CancelledError as err:
         # this can happen if the task is cancelled without sending SIGINT
         L.info("Ignored {} in lifespan", err)

@@ -8,6 +8,7 @@ import sqlalchemy as sa
 from app.config import settings
 from app.db.model import Event, Job
 from app.task.queue_consumer import storage as test_module
+from app.utils import since_unix_epoch
 
 from tests.constants import PROJ_ID, VLAB_ID
 
@@ -32,12 +33,12 @@ def _get_receive_message_response(message_id, receipt_handle, message_body):
     return {"Messages": [message]}
 
 
-def _prepare_stub(stub, queue_url, message_id, receipt_handle, message_body):
+def _prepare_stub(stub, queue_url, queue_name, message_id, receipt_handle, message_body):
     stub.add_response(
         "get_queue_url",
         service_response=_get_queue_url_response(queue_url),
         expected_params={
-            "QueueName": "storage.fifo",
+            "QueueName": queue_name,
         },
     )
     stub.add_response(
@@ -69,16 +70,17 @@ def _prepare_stub(stub, queue_url, message_id, receipt_handle, message_body):
 @pytest.mark.usefixtures("_db_account")
 async def test_consume(sqs_stubber, sqs_client_factory, db):
     queue_name = settings.SQS_STORAGE_QUEUE_NAME
-    queue_url = "http://queue:9324/000000000000/storage.fifo"
+    queue_url = f"http://queue:9324/000000000000/{queue_name}"
     message_id = "3e7a742a-3450-4ca2-a2ee-b044a525d16f"
     receipt_handle = "3e7a742a-3450-4ca2-a2ee-b044a525d16f#b0880329-82c2-4f39-92e3-d0d3d70e7dbf"
+    timestamp = since_unix_epoch()
     message_body = {
         "type": "storage",
         "proj_id": PROJ_ID,
         "size": "1073741824",
-        "timestamp": "1719477803993",
+        "timestamp": timestamp,
     }
-    _prepare_stub(sqs_stubber, queue_url, message_id, receipt_handle, message_body)
+    _prepare_stub(sqs_stubber, queue_url, queue_name, message_id, receipt_handle, message_body)
 
     consumer = test_module.StorageQueueConsumer(
         name="test-storage-consumer",
@@ -101,7 +103,8 @@ async def test_consume(sqs_stubber, sqs_client_factory, db):
     records = (await db.scalars(query)).all()
     assert len(records) == 1
     assert records[0].service_type == "storage"
+    assert records[0].service_subtype == "storage"
     assert records[0].vlab_id == UUID(VLAB_ID)
     assert records[0].proj_id == UUID(PROJ_ID)
-    assert records[0].started_at == datetime.fromtimestamp(1719477803.993, tz=UTC)
+    assert records[0].started_at == datetime.fromtimestamp(timestamp, tz=UTC)
     assert records[0].usage_params == {"size": 1073741824}

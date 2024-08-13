@@ -18,22 +18,22 @@ class ErrorResponse(BaseModel):
     details: str | None = None
 
 
-class ReservationRequest(BaseModel):
-    """ReservationRequest."""
+class BaseReservationRequest(BaseModel):
+    """BaseReservationRequest."""
 
     proj_id: UUID
     type: ServiceType
     subtype: ServiceSubtype
 
 
-class OneshotReservationRequest(ReservationRequest):
+class OneshotReservationRequest(BaseReservationRequest):
     """OneshotReservationRequest."""
 
     type: Literal[ServiceType.ONESHOT]
     count: Annotated[int, Field(ge=0)]
 
 
-class LongrunReservationRequest(ReservationRequest):
+class LongrunReservationRequest(BaseReservationRequest):
     """LongrunReservationRequest."""
 
     type: Literal[ServiceType.LONGRUN]

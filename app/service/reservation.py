@@ -6,9 +6,9 @@ from app.constants import AccountType, TransactionType
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.api import (
+    BaseReservationRequest,
     LongrunReservationRequest,
     OneshotReservationRequest,
-    ReservationRequest,
     ReservationResponse,
 )
 from app.service.price import calculate_cost
@@ -18,7 +18,7 @@ from app.utils import create_uuid, utcnow
 
 async def _make_reservation(
     repos: RepositoryGroup,
-    reservation_request: ReservationRequest,
+    reservation_request: BaseReservationRequest,
     usage_value: int,
     reservation_params: dict[str, Any],
 ) -> ReservationResponse:

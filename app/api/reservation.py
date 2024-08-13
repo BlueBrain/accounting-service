@@ -1,6 +1,6 @@
 """Reservation api."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
 from app.dependencies import RepoGroupDep
 from app.schema.api import (
@@ -13,7 +13,7 @@ from app.service import reservation
 router = APIRouter()
 
 
-@router.post("/oneshot")
+@router.post("/oneshot", status_code=status.HTTP_201_CREATED)
 async def make_oneshot_reservation(
     repos: RepoGroupDep,
     reservation_request: OneshotReservationRequest,
@@ -22,7 +22,7 @@ async def make_oneshot_reservation(
     return await reservation.make_oneshot_reservation(repos, reservation_request)
 
 
-@router.post("/longrun")
+@router.post("/longrun", status_code=status.HTTP_201_CREATED)
 async def make_longrun_reservation(
     repos: RepoGroupDep,
     reservation_request: LongrunReservationRequest,

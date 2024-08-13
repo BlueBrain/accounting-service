@@ -47,6 +47,7 @@ target-version = "py312"
 preview = true
 select = ["ALL"]
 ignore = [
+    "A005",    # Module is shadowing a Python builtin module
     "ANN002",  # Missing type annotation for `*args`
     "ANN003",  # Missing type annotation for `**kwargs`
     "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
@@ -59,6 +60,10 @@ ignore = [
     "S104",    # Possible binding to all interfaces
     "FIX002",  # Line contains TODO, consider resolving the issue
     "TD",      # TODOs
+    ### TODO: remove rules temporarily ignored
+    "DOC201",  # `return` is not documented in docstring
+    "DOC402",  # `yield` is not documented in docstring
+    "DOC501",  # Raised exception missing from docstring
 ]
 
 [tool.ruff.lint.isort]
@@ -77,6 +82,7 @@ combine-as-imports = true
     "D",       # pydocstyle
     "ERA001",  # Found commented-out code
     "INP001",  # Missing `__init__.py`
+    "PLC2701", # Private name import from external module
     "PLR2004", # magic value (constant) used in comparison (i.e. expected == 3)
     "S101",    # Use of `assert` detected
     "SLF001",  # private member access

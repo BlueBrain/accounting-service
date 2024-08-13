@@ -1,7 +1,13 @@
 """Generic utilities."""
 
+import time
 import uuid
 from datetime import UTC, datetime
+
+
+def since_unix_epoch() -> int:
+    """Return the seconds since the Unix epoch."""
+    return int(time.time())
 
 
 def utcnow() -> datetime:

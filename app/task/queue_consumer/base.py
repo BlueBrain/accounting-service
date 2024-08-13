@@ -3,8 +3,6 @@
 import asyncio
 import traceback
 from abc import ABC, abstractmethod
-from collections.abc import Callable
-from contextlib import AbstractAsyncContextManager
 from typing import Any
 from uuid import UUID
 
@@ -16,7 +14,7 @@ from app.config import settings
 from app.constants import EventStatus
 from app.db.session import database_session_manager
 from app.logger import L
-from app.queue.utils import create_default_sqs_client, get_queue_url
+from app.queue.utils import CreateSQSClientProtocol, create_default_sqs_client, get_queue_url
 from app.repository.event import EventRepository
 
 
@@ -28,7 +26,7 @@ class QueueConsumer(ABC):
         name: str,
         queue_name: str,
         initial_delay: int = 0,
-        create_sqs_client: Callable[[], AbstractAsyncContextManager[AioBaseClient]] | None = None,
+        create_sqs_client: CreateSQSClientProtocol | None = None,
     ) -> None:
         """Init the QueueConsumer.
 
@@ -36,7 +34,7 @@ class QueueConsumer(ABC):
             name: name of the task.
             queue_name: name of the queue.
             initial_delay: initial delay in seconds, before starting to consume the queue.
-            create_sqs_client: optional context manager used to create a sqs client.
+            create_sqs_client: optional async context manager used to create a sqs client.
         """
         self._name = name
         self._queue_name = queue_name

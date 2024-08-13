@@ -1,6 +1,9 @@
 """Usage service."""
 
+from app.config import settings
 from app.logger import L
+from app.queue.session import SQSManager
+from app.schema.queue import LongrunEvent, OneshotEvent, StorageEvent
 
 
 def calculate_longrun_usage_value(
@@ -38,3 +41,33 @@ def calculate_storage_usage_value(size: int, duration: float) -> int:
         duration: duration in seconds.
     """
     return int(size * duration)
+
+
+async def add_oneshot_usage(event: OneshotEvent, sqs_manager: SQSManager) -> None:
+    """Add a oneshot event to the queue."""
+    msg_body = event.model_dump_json()
+    await sqs_manager.client.send_message(
+        QueueUrl=sqs_manager.queue_urls[settings.SQS_ONESHOT_QUEUE_NAME],
+        MessageBody=msg_body,
+        MessageGroupId=str(event.proj_id),
+    )
+
+
+async def add_longrun_usage(event: LongrunEvent, sqs_manager: SQSManager) -> None:
+    """Add a longrun event to the queue."""
+    msg_body = event.model_dump_json()
+    await sqs_manager.client.send_message(
+        QueueUrl=sqs_manager.queue_urls[settings.SQS_LONGRUN_QUEUE_NAME],
+        MessageBody=msg_body,
+        MessageGroupId=str(event.proj_id),
+    )
+
+
+async def add_storage_usage(event: StorageEvent, sqs_manager: SQSManager) -> None:
+    """Add a storage event to the queue."""
+    msg_body = event.model_dump_json()
+    await sqs_manager.client.send_message(
+        QueueUrl=sqs_manager.queue_urls[settings.SQS_STORAGE_QUEUE_NAME],
+        MessageBody=msg_body,
+        MessageGroupId=str(event.proj_id),
+    )

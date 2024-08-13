@@ -13,7 +13,7 @@ from botocore.stub import Stubber
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application import app
+from app import application
 from app.config import settings
 from app.constants import D0, ServiceSubtype, ServiceType
 from app.db.model import Account, Price
@@ -55,7 +55,12 @@ async def _db_cleanup(db):
 
 
 @pytest.fixture
-async def api_client() -> AsyncIterator[AsyncClient]:
+async def app():
+    return application.app
+
+
+@pytest.fixture
+async def api_client(app) -> AsyncIterator[AsyncClient]:
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test",
@@ -84,7 +89,7 @@ def sqs_client_factory(sqs_client):
     """Always return the same sqs client for performance reasons."""
 
     @asynccontextmanager
-    async def factory():
+    async def factory(client_config=None):  # noqa: ARG001
         yield sqs_client
 
     return factory
