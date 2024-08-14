@@ -14,11 +14,11 @@ def _convert_timestamp(value: int) -> datetime:
     """Convert value from seconds since the Unix epoch to datetime with timezone."""
     delta = int(value - since_unix_epoch())
     if not -settings.MAX_PAST_EVENT_TIMEDELTA < delta < settings.MAX_FUTURE_EVENT_TIMEDELTA:
-        msg = (
+        err = (
             f"Invalid timestamp {value}: it must be expressed in seconds since the Unix epoch, "
             f"and fall in the configured expected interval [detected delta={delta}]"
         )
-        raise ValueError(msg)
+        raise ValueError(err)
     return datetime.fromtimestamp(value, tz=UTC)
 
 

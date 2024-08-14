@@ -63,8 +63,8 @@ class LongrunQueueConsumer(QueueConsumer):
                 LongrunStatus.FINISHED: _handle_finished,
             }[event.status]
         except KeyError:
-            error = f"Status not handled: {event.status}"
-            raise ValueError(error) from None
+            err = f"Status not handled: {event.status}"
+            raise ValueError(err) from None
 
         result = await handler(repos, event=event, accounts=accounts)
         return result.id

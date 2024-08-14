@@ -63,7 +63,7 @@ services:
     command:
     - postgres
 #    - -clog_statement=all
-    - -clog_min_duration_statement=100"
+    - -clog_min_duration_statement=100ms
     - -clog_lock_waits=on
 
   queue:

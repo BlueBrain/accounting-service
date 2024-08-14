@@ -1,6 +1,7 @@
 """Price repository module."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -35,8 +36,8 @@ class PriceRepository(BaseRepository):
                     Price.valid_to > usage_datetime,
                 ),
             )
-            .order_by(Price.valid_from.desc())
-            # .limit(1)
+            .order_by(Price.valid_from.desc(), Price.id.desc())
+            .limit(1)
         )
         return (await self.db.execute(query)).scalar_one_or_none()
 
@@ -62,6 +63,13 @@ class PriceRepository(BaseRepository):
                 usage_datetime=usage_datetime,
             )
         if not price:
-            msg = f"Missing price for: {vlab_id} {service_type} {service_subtype} {usage_datetime}"
-            raise ApiError(message=msg, error_code=ApiErrorCode.ENTITY_NOT_FOUND)
+            err = f"Missing price for: {vlab_id} {service_type} {service_subtype} {usage_datetime}"
+            raise ApiError(message=err, error_code=ApiErrorCode.ENTITY_NOT_FOUND)
         return price
+
+    async def add_price(self, data: dict[str, Any]) -> Price:
+        """Add a price for the specified vlab, or as the default price if vlab is None.
+
+        Any other pre-existing price for the same service and vlab isn't invalidated.
+        """
+        return (await self.db.execute(sa.insert(Price).values(data).returning(Price))).scalar_one()

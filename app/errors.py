@@ -1,8 +1,12 @@
 """Api exceptions."""
 
 import dataclasses
+from collections.abc import Iterator
+from contextlib import contextmanager
 from enum import auto
 from http import HTTPStatus
+
+from sqlalchemy.exc import NoResultFound
 
 from app.enum import UpperStrEnum
 
@@ -37,3 +41,16 @@ class ApiError(Exception):
 
 class EventError(Exception):
     """Raised when failing to process a message in the queue."""
+
+
+@contextmanager
+def ensure_result(error_message: str) -> Iterator[None]:
+    """Context manager that raises ApiError when no results are found after executing a query."""
+    try:
+        yield
+    except NoResultFound as err:
+        raise ApiError(
+            message=error_message,
+            error_code=ApiErrorCode.ENTITY_NOT_FOUND,
+            http_status_code=HTTPStatus.NOT_FOUND,
+        ) from err

@@ -44,7 +44,7 @@ class Event(Base):
     attributes: Mapped[dict[str, Any]]
     body: Mapped[str | None]
     error: Mapped[str | None]
-    job_id: Mapped[UUID | None] = mapped_column(ForeignKey("job.id"))
+    job_id: Mapped[UUID | None] = mapped_column(ForeignKey("job.id"), index=True)
     counter: Mapped[int] = mapped_column(SmallInteger)
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
@@ -56,8 +56,8 @@ class Job(Base):
     __tablename__ = "job"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
-    vlab_id: Mapped[UUID] = mapped_column(index=True)
-    proj_id: Mapped[UUID] = mapped_column(index=True)
+    vlab_id: Mapped[UUID] = mapped_column(ForeignKey("account.id"), index=True)
+    proj_id: Mapped[UUID] = mapped_column(ForeignKey("account.id"), index=True)
     service_type: Mapped[ServiceType]
     service_subtype: Mapped[ServiceSubtype]
     created_at: Mapped[CREATED_AT]
@@ -79,7 +79,7 @@ class Account(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     account_type: Mapped[AccountType]
-    parent_id: Mapped[UUID | None] = mapped_column(ForeignKey("account.id"))
+    parent_id: Mapped[UUID | None] = mapped_column(ForeignKey("account.id"), index=True)
     name: Mapped[str]
     balance: Mapped[Decimal] = mapped_column(server_default=text("0"))
     enabled: Mapped[bool] = mapped_column(server_default=true())
@@ -95,8 +95,8 @@ class Journal(Base):
     id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
     transaction_datetime: Mapped[datetime]
     transaction_type: Mapped[TransactionType]
-    job_id: Mapped[UUID | None] = mapped_column(ForeignKey("job.id"))
-    price_id: Mapped[BIGINT | None] = mapped_column(ForeignKey("price.id"))
+    job_id: Mapped[UUID | None] = mapped_column(ForeignKey("job.id"), index=True)
+    price_id: Mapped[BIGINT | None] = mapped_column(ForeignKey("price.id"), index=True)
     properties: Mapped[dict[str, Any] | None]
     created_at: Mapped[CREATED_AT]
 
@@ -107,8 +107,8 @@ class Ledger(Base):
     __tablename__ = "ledger"
 
     id: Mapped[BIGINT] = mapped_column(Identity(), primary_key=True)
-    account_id: Mapped[UUID] = mapped_column(ForeignKey("account.id"))
-    journal_id: Mapped[BIGINT] = mapped_column(ForeignKey("journal.id"))
+    account_id: Mapped[UUID] = mapped_column(ForeignKey("account.id"), index=True)
+    journal_id: Mapped[BIGINT] = mapped_column(ForeignKey("journal.id"), index=True)
     amount: Mapped[Decimal]
     created_at: Mapped[CREATED_AT]
 
@@ -125,7 +125,7 @@ class Price(Base):
     valid_to: Mapped[datetime | None]
     fixed_cost: Mapped[Decimal]
     multiplier: Mapped[Decimal]
-    vlab_id: Mapped[UUID | None] = mapped_column(index=True)
+    vlab_id: Mapped[UUID | None] = mapped_column(ForeignKey("account.id"), index=True)
     created_at: Mapped[CREATED_AT]
     updated_at: Mapped[UPDATED_AT]
 

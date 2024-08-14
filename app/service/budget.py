@@ -1,13 +1,10 @@
 """Budget service."""
 
 from decimal import Decimal
-from http import HTTPStatus
 from uuid import UUID
 
-from sqlalchemy.exc import NoResultFound
-
 from app.constants import AccountType, TransactionType
-from app.errors import ApiError, ApiErrorCode
+from app.errors import ApiError, ApiErrorCode, ensure_result
 from app.repository.group import RepositoryGroup
 from app.utils import utcnow
 
@@ -15,22 +12,10 @@ from app.utils import utcnow
 async def top_up(repos: RepositoryGroup, vlab_id: UUID, amount: Decimal) -> None:
     """Top-up a virtual lab account."""
     now = utcnow()
-    try:
+    with ensure_result(error_message="System account not found"):
         system_account = await repos.account.get_system_account()
-    except NoResultFound as err:
-        raise ApiError(
-            message="System account not found",
-            error_code=ApiErrorCode.ENTITY_NOT_FOUND,
-            http_status_code=HTTPStatus.NOT_FOUND,
-        ) from err
-    try:
+    with ensure_result(error_message="Virtual lab not found"):
         vlab = await repos.account.get_vlab_account(vlab_id=vlab_id)
-    except NoResultFound as err:
-        raise ApiError(
-            message="Virtual lab not found",
-            error_code=ApiErrorCode.ENTITY_NOT_FOUND,
-            http_status_code=HTTPStatus.NOT_FOUND,
-        ) from err
     await repos.ledger.insert_transaction(
         amount=amount,
         debited_from=system_account.id,
@@ -43,16 +28,10 @@ async def top_up(repos: RepositoryGroup, vlab_id: UUID, amount: Decimal) -> None
 async def assign(repos: RepositoryGroup, vlab_id: UUID, proj_id: UUID, amount: Decimal) -> None:
     """Move a budget from vlab_id to proj_id."""
     now = utcnow()
-    try:
+    with ensure_result(error_message="Account not found"):
         accounts = await repos.account.get_accounts_by_proj_id(
             proj_id=proj_id, for_update={AccountType.VLAB}
         )
-    except NoResultFound as err:
-        raise ApiError(
-            message="Account not found",
-            error_code=ApiErrorCode.ENTITY_NOT_FOUND,
-            http_status_code=HTTPStatus.NOT_FOUND,
-        ) from err
     if accounts.vlab.id != vlab_id:
         raise ApiError(
             message="The project doesn't belong to the virtual-lab",
@@ -75,16 +54,10 @@ async def assign(repos: RepositoryGroup, vlab_id: UUID, proj_id: UUID, amount: D
 async def reverse(repos: RepositoryGroup, vlab_id: UUID, proj_id: UUID, amount: Decimal) -> None:
     """Move a budget from proj_id to vlab_id."""
     now = utcnow()
-    try:
+    with ensure_result(error_message="Account not found"):
         accounts = await repos.account.get_accounts_by_proj_id(
             proj_id=proj_id, for_update={AccountType.PROJ}
         )
-    except NoResultFound as err:
-        raise ApiError(
-            message="Account not found",
-            error_code=ApiErrorCode.ENTITY_NOT_FOUND,
-            http_status_code=HTTPStatus.NOT_FOUND,
-        ) from err
     if accounts.vlab.id != vlab_id:
         raise ApiError(
             message="The project doesn't belong to the virtual-lab",
@@ -109,17 +82,11 @@ async def move(
 ) -> None:
     """Move a budget between projects belonging to the same virtual lab."""
     now = utcnow()
-    try:
+    with ensure_result(error_message="Account not found"):
         debited_accounts = await repos.account.get_accounts_by_proj_id(
             proj_id=debited_from, for_update={AccountType.PROJ}
         )
         credited_accounts = await repos.account.get_accounts_by_proj_id(proj_id=credited_to)
-    except NoResultFound as err:
-        raise ApiError(
-            message="Account not found",
-            error_code=ApiErrorCode.ENTITY_NOT_FOUND,
-            http_status_code=HTTPStatus.NOT_FOUND,
-        ) from err
     if debited_from == credited_to:
         raise ApiError(
             message="The debited and credited accounts must be different",

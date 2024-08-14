@@ -1,10 +1,10 @@
 """Api schema."""
 
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
 from app.constants import D0, ServiceSubtype, ServiceType
 from app.errors import ApiErrorCode
@@ -124,3 +124,29 @@ class MoveBudgetRequest(BaseModel):
     debited_from: UUID
     credited_to: UUID
     amount: Annotated[Decimal, Field(gt=D0)]
+
+
+class AddPriceRequest(BaseModel):
+    """AddPriceRequest."""
+
+    service_type: ServiceType
+    service_subtype: ServiceSubtype
+    valid_from: AwareDatetime
+    valid_to: AwareDatetime | None
+    fixed_cost: Annotated[Decimal, Field(ge=D0)]
+    multiplier: Annotated[Decimal, Field(ge=D0)]
+    vlab_id: UUID | None
+
+    @model_validator(mode="after")
+    def check_validity_interval(self) -> Self:
+        """Check that valid_to is greater than valid_from, if provided."""
+        if self.valid_to is not None and self.valid_from >= self.valid_to:
+            err = "valid_to must be greater than valid_from"
+            raise ValueError(err)
+        return self
+
+
+class AddPriceResponse(AddPriceRequest):
+    """AddPriceResponse."""
+
+    id: int
