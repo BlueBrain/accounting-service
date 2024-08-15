@@ -3,6 +3,7 @@
 from typing import Any
 
 from app.constants import AccountType, TransactionType
+from app.errors import ensure_result
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.api import (
@@ -25,9 +26,10 @@ async def _make_reservation(
     """Make the job reservation."""
     reserving_at = utcnow()
     # retrieve the accounts while locking the project account against concurrent updates
-    accounts = await repos.account.get_accounts_by_proj_id(
-        proj_id=reservation_request.proj_id, for_update={AccountType.PROJ}
-    )
+    with ensure_result(error_message="Account not found"):
+        accounts = await repos.account.get_accounts_by_proj_id(
+            proj_id=reservation_request.proj_id, for_update={AccountType.PROJ}
+        )
     available_amount = accounts.proj.balance
     price = await repos.price.get_price(
         vlab_id=accounts.vlab.id,
