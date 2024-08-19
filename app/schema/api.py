@@ -45,10 +45,8 @@ class LongrunReservationRequest(BaseReservationRequest):
 class ReservationResponse(BaseModel):
     """ReservationResponse."""
 
-    is_allowed: bool
-    requested_amount: Decimal
-    available_amount: Decimal
-    job_id: UUID | None = None
+    job_id: UUID
+    amount: Decimal
 
 
 class SysAccountCreationRequest(BaseModel):

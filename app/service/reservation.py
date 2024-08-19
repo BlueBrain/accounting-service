@@ -1,9 +1,10 @@
 """Reservation service."""
 
+from http import HTTPStatus
 from typing import Any
 
 from app.constants import AccountType, TransactionType
-from app.errors import ensure_result
+from app.errors import ApiError, ApiErrorCode, ensure_result
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.api import (
@@ -45,10 +46,11 @@ async def _make_reservation(
             requested_amount,
             available_amount,
         )
-        return ReservationResponse(
-            is_allowed=False,
-            requested_amount=requested_amount,
-            available_amount=available_amount,
+        raise ApiError(
+            message="Reservation not allowed because of insufficient funds",
+            error_code=ApiErrorCode.INSUFFICIENT_FUNDS,
+            http_status_code=HTTPStatus.PAYMENT_REQUIRED,
+            details=f"Requested amount: {requested_amount:.2f}",
         )
     job_id = create_uuid()
     await repos.job.insert_job(
@@ -78,10 +80,8 @@ async def _make_reservation(
         job_id,
     )
     return ReservationResponse(
-        is_allowed=True,
-        requested_amount=requested_amount,
-        available_amount=available_amount,
         job_id=job_id,
+        amount=requested_amount,
     )
 
 

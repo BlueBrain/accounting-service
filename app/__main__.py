@@ -66,6 +66,5 @@ async def main() -> None:
         await database_session_manager.close()
 
 
-if __name__ == "__main__":
-    with contextlib.suppress(KeyboardInterrupt):
-        uvloop.run(main())
+with contextlib.suppress(KeyboardInterrupt):
+    uvloop.run(main())

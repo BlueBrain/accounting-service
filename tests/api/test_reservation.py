@@ -18,9 +18,7 @@ async def test_make_oneshot_reservation(api_client, mock_uuid):
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
-        "is_allowed": True,
-        "requested_amount": "10.00000",
-        "available_amount": "400",
+        "amount": "10.00000",
     }
     assert response.status_code == 201
     assert mock_uuid.call_count == 1
@@ -36,12 +34,11 @@ async def test_make_oneshot_reservation(api_client, mock_uuid):
     response = await api_client.post("/api/reservation/oneshot", json=request_payload)
 
     assert response.json() == {
-        "job_id": None,
-        "is_allowed": False,
-        "requested_amount": "400.00000",
-        "available_amount": "390.00000",
+        "error_code": "INSUFFICIENT_FUNDS",
+        "message": "Reservation not allowed because of insufficient funds",
+        "details": "Requested amount: 400.00",
     }
-    assert response.status_code == 201
+    assert response.status_code == 402
     assert mock_uuid.call_count == 0
 
 
@@ -60,9 +57,7 @@ async def test_make_longrun_reservation(api_client, mock_uuid):
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
-        "is_allowed": True,
-        "requested_amount": "73.50",
-        "available_amount": "400",
+        "amount": "73.50",
     }
     assert response.status_code == 201
     assert mock_uuid.call_count == 1
@@ -80,10 +75,9 @@ async def test_make_longrun_reservation(api_client, mock_uuid):
     response = await api_client.post("/api/reservation/longrun", json=request_payload)
 
     assert response.json() == {
-        "job_id": None,
-        "is_allowed": False,
-        "requested_amount": "433.50",
-        "available_amount": "326.50",
+        "error_code": "INSUFFICIENT_FUNDS",
+        "message": "Reservation not allowed because of insufficient funds",
+        "details": "Requested amount: 433.50",
     }
-    assert response.status_code == 201
+    assert response.status_code == 402
     assert mock_uuid.call_count == 0

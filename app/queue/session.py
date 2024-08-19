@@ -2,7 +2,7 @@
 
 from contextlib import AsyncExitStack
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 from aiobotocore.client import AioBaseClient
 
@@ -43,7 +43,7 @@ class SQSManager:
         self._client_config = client_config
         self._create_sqs_client = create_sqs_client or create_default_sqs_client
 
-    async def __aenter__(self) -> None:
+    async def __aenter__(self) -> Self:
         """Initialize the SQS client."""
         self._client = await self._exit_stack.enter_async_context(
             self._create_sqs_client(client_config=self._client_config)
@@ -54,6 +54,7 @@ class SQSManager:
             for name in self._queue_names
         }
         L.info("SQS queue urls have been retrieved", **self._queue_urls)
+        return self
 
     async def __aexit__(
         self,
