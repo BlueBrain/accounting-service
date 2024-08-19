@@ -14,7 +14,7 @@ async def test_make_oneshot_reservation(api_client, mock_uuid):
         "subtype": ServiceSubtype.ML_LLM,
         "count": "1000000",
     }
-    response = await api_client.post("/api/reservation/oneshot", json=request_payload)
+    response = await api_client.post("/reservation/oneshot", json=request_payload)
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
@@ -31,7 +31,7 @@ async def test_make_oneshot_reservation(api_client, mock_uuid):
         "subtype": ServiceSubtype.ML_LLM,
         "count": "40000000",
     }
-    response = await api_client.post("/api/reservation/oneshot", json=request_payload)
+    response = await api_client.post("/reservation/oneshot", json=request_payload)
 
     assert response.json() == {
         "error_code": "INSUFFICIENT_FUNDS",
@@ -53,7 +53,7 @@ async def test_make_longrun_reservation(api_client, mock_uuid):
         "instance_type": "",
         "duration": "3600",
     }
-    response = await api_client.post("/api/reservation/longrun", json=request_payload)
+    response = await api_client.post("/reservation/longrun", json=request_payload)
 
     assert response.json() == {
         "job_id": "00000000-0000-0000-0000-000000000001",
@@ -72,7 +72,7 @@ async def test_make_longrun_reservation(api_client, mock_uuid):
         "instance_type": "",
         "duration": "3600",
     }
-    response = await api_client.post("/api/reservation/longrun", json=request_payload)
+    response = await api_client.post("/reservation/longrun", json=request_payload)
 
     assert response.json() == {
         "error_code": "INSUFFICIENT_FUNDS",

@@ -6,7 +6,7 @@ from tests.constants import PROJ_ID, PROJ_ID_2, VLAB_ID
 @pytest.mark.usefixtures("_db_account")
 async def test_budget(api_client):
     response = await api_client.post(
-        "/api/budget/top-up",
+        "/budget/top-up",
         json={"vlab_id": VLAB_ID, "amount": "123.45"},
     )
 
@@ -14,7 +14,7 @@ async def test_budget(api_client):
     assert response.status_code == 200
 
     response = await api_client.post(
-        "/api/budget/assign",
+        "/budget/assign",
         json={"vlab_id": VLAB_ID, "proj_id": PROJ_ID, "amount": "23.45"},
     )
 
@@ -22,7 +22,7 @@ async def test_budget(api_client):
     assert response.status_code == 200
 
     response = await api_client.post(
-        "/api/budget/reverse",
+        "/budget/reverse",
         json={"vlab_id": VLAB_ID, "proj_id": PROJ_ID, "amount": "3.45"},
     )
 
@@ -30,7 +30,7 @@ async def test_budget(api_client):
     assert response.status_code == 200
 
     response = await api_client.post(
-        "/api/budget/move",
+        "/budget/move",
         json={
             "vlab_id": VLAB_ID,
             "debited_from": PROJ_ID,
