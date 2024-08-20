@@ -17,7 +17,7 @@ async def test_post_price(api_client):
     }
     response = await api_client.post("/price", json=data)
 
-    assert response.json() == data | {"id": 1}
+    assert response.json()["data"] == data | {"id": 1}
     assert response.status_code == 201
 
 
@@ -34,7 +34,7 @@ async def test_post_price_with_vlab_and_valid_to(api_client):
     }
     response = await api_client.post("/price", json=data)
 
-    assert response.json() == data | {"id": 1}
+    assert response.json()["data"] == data | {"id": 1}
     assert response.status_code == 201
 
 

@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import auto
 from http import HTTPStatus
+from typing import Any
 
 from sqlalchemy.exc import NoResultFound
 
@@ -27,7 +28,7 @@ class ApiError(Exception):
     message: str
     error_code: ApiErrorCode
     http_status_code: HTTPStatus = HTTPStatus.BAD_REQUEST
-    details: str | None = None
+    details: Any = None
 
     def __repr__(self) -> str:
         """Return the repr of the error."""
@@ -36,7 +37,16 @@ class ApiError(Exception):
             f"message={self.message!r}, "
             f"error_code={self.error_code}, "
             f"http_status_code={self.http_status_code}, "
-            f"details={self.details})"
+            f"details={self.details!r})"
+        )
+
+    def __str__(self) -> str:
+        """Return the str representation."""
+        return (
+            f"message={self.message!r} "
+            f"error_code={self.error_code} "
+            f"http_status_code={self.http_status_code} "
+            f"details={self.details!r}"
         )
 
 

@@ -17,3 +17,6 @@ def test_errors():
         "ApiError(message='Test error', error_code=INVALID_REQUEST, "
         "http_status_code=400, details=None)"
     )
+    assert str(error) == (
+        "message='Test error' error_code=INVALID_REQUEST http_status_code=400 details=None"
+    )

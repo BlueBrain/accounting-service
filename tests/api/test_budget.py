@@ -10,7 +10,7 @@ async def test_budget(api_client):
         json={"vlab_id": VLAB_ID, "amount": "123.45"},
     )
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 200
 
     response = await api_client.post(
@@ -18,7 +18,7 @@ async def test_budget(api_client):
         json={"vlab_id": VLAB_ID, "proj_id": PROJ_ID, "amount": "23.45"},
     )
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 200
 
     response = await api_client.post(
@@ -26,7 +26,7 @@ async def test_budget(api_client):
         json={"vlab_id": VLAB_ID, "proj_id": PROJ_ID, "amount": "3.45"},
     )
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 200
 
     response = await api_client.post(
@@ -39,7 +39,7 @@ async def test_budget(api_client):
         },
     )
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 200
 
     # TODO: verify the content of the ledger and account rows

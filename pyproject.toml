@@ -140,3 +140,4 @@ omit = [
 show_error_codes = true
 ignore_missing_imports = true
 allow_redefinition = true
+enable_incomplete_feature = "NewGenericSyntax"  # Support Python 3.12 Syntax for Generics (PEP 695)

@@ -5,7 +5,7 @@ from decimal import Decimal
 from app.db.model import Price
 from app.errors import ensure_result
 from app.repository.group import RepositoryGroup
-from app.schema.api import AddPriceRequest
+from app.schema.api import AddPriceIn
 
 
 def calculate_cost(price: Price, usage_value: int, *, include_fixed_cost: bool = True) -> Decimal:
@@ -16,7 +16,7 @@ def calculate_cost(price: Price, usage_value: int, *, include_fixed_cost: bool =
     return cost
 
 
-async def add_price(repos: RepositoryGroup, price_request: AddPriceRequest) -> Price:
+async def add_price(repos: RepositoryGroup, price_request: AddPriceIn) -> Price:
     """Add a price."""
     if price_request.vlab_id:
         with ensure_result(error_message="Virtual lab not found"):

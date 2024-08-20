@@ -29,7 +29,7 @@ async def test_add_oneshot_usage(api_client, mock_sqs_manager):
     }
     response = await api_client.post("/usage/oneshot", json=request_payload)
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 201
     assert mock_sqs_manager.client.send_message.await_count == 1
 
@@ -48,7 +48,7 @@ async def test_add_longrun_usage(api_client, mock_sqs_manager):
     }
     response = await api_client.post("/usage/longrun", json=request_payload)
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 201
     assert mock_sqs_manager.client.send_message.await_count == 1
 
@@ -64,6 +64,6 @@ async def test_add_storage_usage(api_client, mock_sqs_manager):
     }
     response = await api_client.post("/usage/storage", json=request_payload)
 
-    assert response.json() == {}
+    assert response.json()["data"] is None
     assert response.status_code == 201
     assert mock_sqs_manager.client.send_message.await_count == 1
