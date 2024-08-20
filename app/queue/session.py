@@ -79,6 +79,3 @@ class SQSManager:
     def queue_urls(self) -> dict[str, str]:
         """Return the dict of queue urls."""
         return self._queue_urls
-
-
-sqs_manager = SQSManager()

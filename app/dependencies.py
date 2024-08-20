@@ -5,9 +5,10 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from app.db.session import database_session_manager
-from app.queue.session import SQSManager, sqs_manager
+from app.queue.session import SQSManager
 from app.repository.group import RepositoryGroup
 
 
@@ -22,9 +23,9 @@ def _repo_group(db: "SessionDep") -> RepositoryGroup:
     return RepositoryGroup(db=db)
 
 
-def _sqs_manager() -> SQSManager:
+def _sqs_manager(request: Request) -> SQSManager:
     """Return the SQS manager."""
-    return sqs_manager
+    return request.state.sqs_manager
 
 
 SessionDep = Annotated[AsyncSession, Depends(_database_session_factory)]
