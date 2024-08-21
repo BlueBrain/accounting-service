@@ -113,14 +113,14 @@ async def _db_account(db):
                     "account_type": "SYS",
                     "parent_id": None,
                     "name": "OBP",
-                    "balance": -2000,
+                    "balance": -3000,
                 },
                 {
                     "id": VLAB_ID,
                     "account_type": "VLAB",
                     "parent_id": None,
                     "name": "Test vlab_01",
-                    "balance": 1000,
+                    "balance": 2000,
                 },
                 {
                     "id": PROJ_ID,

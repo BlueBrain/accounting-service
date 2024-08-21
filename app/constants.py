@@ -6,6 +6,7 @@ from enum import auto
 from app.enum import HyphenStrEnum
 
 D0 = Decimal(0)
+DECIMAL_PLACES = 2
 
 
 class EventStatus(HyphenStrEnum):

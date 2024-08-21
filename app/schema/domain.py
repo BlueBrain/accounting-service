@@ -6,9 +6,10 @@ from decimal import Decimal
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from app.constants import D0, ServiceSubtype, ServiceType
+from app.schema.common import BaseModel
 
 
 class BaseAccount(BaseModel):

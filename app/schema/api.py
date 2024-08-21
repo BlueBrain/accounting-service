@@ -4,10 +4,11 @@ from decimal import Decimal
 from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, Field, model_validator
+from pydantic import AwareDatetime, Field, model_validator
 
 from app.constants import D0, ServiceSubtype, ServiceType
 from app.errors import ApiErrorCode
+from app.schema.common import BaseModel, FormattedDecimal
 
 
 class ApiResponse[T](BaseModel):
@@ -155,3 +156,25 @@ class AddPriceOut(AddPriceIn):
     """AddPriceOut."""
 
     id: int
+
+
+class ProjBalanceOut(BaseModel):
+    """ProjBalanceOut."""
+
+    proj_id: UUID
+    balance: FormattedDecimal
+    reservation: FormattedDecimal
+
+
+class VlabBalanceOut(BaseModel):
+    """VlabBalanceOut."""
+
+    vlab_id: UUID
+    balance: FormattedDecimal
+    projects: list[ProjBalanceOut] | None = None
+
+
+class SysBalanceOut(BaseModel):
+    """SysBalanceOut."""
+
+    balance: FormattedDecimal

@@ -1,12 +1,26 @@
 """Common schema."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BeforeValidator, PlainSerializer, validate_call
+from pydantic import (
+    BaseModel as PydanticBaseModel,
+    BeforeValidator,
+    ConfigDict,
+    PlainSerializer,
+    validate_call,
+)
 
 from app.config import settings
+from app.constants import DECIMAL_PLACES
 from app.utils import since_unix_epoch
+
+
+class BaseModel(PydanticBaseModel):
+    """Subclass of the original BaseModel with custom configuration."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 @validate_call
@@ -26,4 +40,9 @@ RecentTimeStamp = Annotated[
     datetime,
     BeforeValidator(_convert_timestamp),
     PlainSerializer(lambda x: int(x.timestamp())),
+]
+
+FormattedDecimal = Annotated[
+    Decimal,
+    PlainSerializer(lambda x: f"{x:.{DECIMAL_PLACES}f}", return_type=str, when_used="json"),
 ]

@@ -3,10 +3,10 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.constants import LongrunStatus, ServiceSubtype, ServiceType
-from app.schema.common import RecentTimeStamp
+from app.schema.common import BaseModel, RecentTimeStamp
 
 
 class StorageEvent(BaseModel):
