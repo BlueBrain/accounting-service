@@ -26,23 +26,23 @@ class ErrorResponse(BaseModel, use_enum_values=True):
     details: Any = None
 
 
-class BaseReservationIn(BaseModel):
-    """BaseReservationIn."""
+class BaseMakeReservationIn(BaseModel):
+    """BaseMakeReservationIn."""
 
     proj_id: UUID
     type: ServiceType
     subtype: ServiceSubtype
 
 
-class OneshotReservationIn(BaseReservationIn):
-    """OneshotReservationIn."""
+class MakeOneshotReservationIn(BaseMakeReservationIn):
+    """MakeOneshotReservationIn."""
 
     type: Literal[ServiceType.ONESHOT]
     count: Annotated[int, Field(ge=0)]
 
 
-class LongrunReservationIn(BaseReservationIn):
-    """LongrunReservationIn."""
+class MakeLongrunReservationIn(BaseMakeReservationIn):
+    """MakeLongrunReservationIn."""
 
     type: Literal[ServiceType.LONGRUN]
     duration: Annotated[int, Field(ge=0)]
@@ -50,8 +50,22 @@ class LongrunReservationIn(BaseReservationIn):
     instance_type: str | None = None
 
 
-class ReservationOut(BaseModel):
-    """ReservationOut."""
+class MakeReservationOut(BaseModel):
+    """MakeReservationOut."""
+
+    job_id: UUID
+    amount: Decimal
+
+
+class ReleaseReservationIn(BaseModel):
+    """ReleaseReservationIn."""
+
+    proj_id: UUID
+    job_id: UUID
+
+
+class ReleaseReservationOut(BaseModel):
+    """ReleaseReservationOut."""
 
     job_id: UUID
     amount: Decimal

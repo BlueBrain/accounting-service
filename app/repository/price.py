@@ -1,6 +1,7 @@
 """Price repository module."""
 
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any
 from uuid import UUID
 
@@ -64,7 +65,11 @@ class PriceRepository(BaseRepository):
             )
         if not price:
             err = f"Missing price for: {vlab_id} {service_type} {service_subtype} {usage_datetime}"
-            raise ApiError(message=err, error_code=ApiErrorCode.ENTITY_NOT_FOUND)
+            raise ApiError(
+                message=err,
+                error_code=ApiErrorCode.ENTITY_NOT_FOUND,
+                http_status_code=HTTPStatus.NOT_FOUND,
+            )
         return price
 
     async def add_price(self, data: dict[str, Any]) -> Price:

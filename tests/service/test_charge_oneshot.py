@@ -13,23 +13,22 @@ from tests.constants import PROJ_ID, VLAB_ID
 
 async def _insert_job(db, job_id, count, started_at):
     await db.execute(
-        sa.insert(Job).values(
-            [
-                {
-                    "id": job_id,
-                    "vlab_id": VLAB_ID,
-                    "proj_id": PROJ_ID,
-                    "service_type": ServiceType.ONESHOT,
-                    "service_subtype": ServiceSubtype.ML_LLM,
-                    "started_at": started_at,
-                    "last_alive_at": started_at,
-                    "last_charged_at": None,
-                    "finished_at": None,
-                    "cancelled_at": None,
-                    "usage_params": {"count": int(count)},
-                }
-            ],
-        )
+        sa.insert(Job),
+        [
+            {
+                "id": job_id,
+                "vlab_id": VLAB_ID,
+                "proj_id": PROJ_ID,
+                "service_type": ServiceType.ONESHOT,
+                "service_subtype": ServiceSubtype.ML_LLM,
+                "started_at": started_at,
+                "last_alive_at": started_at,
+                "last_charged_at": None,
+                "finished_at": None,
+                "cancelled_at": None,
+                "usage_params": {"count": int(count)},
+            }
+        ],
     )
 
 

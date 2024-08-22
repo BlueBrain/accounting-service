@@ -8,10 +8,10 @@ from app.errors import ApiError, ApiErrorCode, ensure_result
 from app.logger import L
 from app.repository.group import RepositoryGroup
 from app.schema.api import (
-    BaseReservationIn,
-    LongrunReservationIn,
-    OneshotReservationIn,
-    ReservationOut,
+    BaseMakeReservationIn,
+    MakeLongrunReservationIn,
+    MakeOneshotReservationIn,
+    MakeReservationOut,
 )
 from app.service.price import calculate_cost
 from app.service.usage import calculate_longrun_usage_value, calculate_oneshot_usage_value
@@ -20,10 +20,10 @@ from app.utils import create_uuid, utcnow
 
 async def _make_reservation(
     repos: RepositoryGroup,
-    reservation_request: BaseReservationIn,
+    reservation_request: BaseMakeReservationIn,
     usage_value: int,
     reservation_params: dict[str, Any],
-) -> ReservationOut:
+) -> MakeReservationOut:
     """Make the job reservation."""
     reserving_at = utcnow()
     # retrieve the accounts while locking the project account against concurrent updates
@@ -79,7 +79,7 @@ async def _make_reservation(
         available_amount,
         job_id,
     )
-    return ReservationOut(
+    return MakeReservationOut(
         job_id=job_id,
         amount=requested_amount,
     )
@@ -87,8 +87,8 @@ async def _make_reservation(
 
 async def make_oneshot_reservation(
     repos: RepositoryGroup,
-    reservation_request: OneshotReservationIn,
-) -> ReservationOut:
+    reservation_request: MakeOneshotReservationIn,
+) -> MakeReservationOut:
     """Make a new reservation for oneshot job."""
     usage_value = calculate_oneshot_usage_value(
         count=reservation_request.count,
@@ -105,8 +105,8 @@ async def make_oneshot_reservation(
 
 async def make_longrun_reservation(
     repos: RepositoryGroup,
-    reservation_request: LongrunReservationIn,
-) -> ReservationOut:
+    reservation_request: MakeLongrunReservationIn,
+) -> MakeReservationOut:
     """Make a new reservation for longrun job."""
     usage_value = calculate_longrun_usage_value(
         instances=reservation_request.instances,

@@ -30,7 +30,7 @@ def calculate_oneshot_usage_value(count: int) -> int:
     Args:
         count: number representing the usage.
     """
-    return count
+    return int(count)
 
 
 def calculate_storage_usage_value(size: int, duration: float) -> int:

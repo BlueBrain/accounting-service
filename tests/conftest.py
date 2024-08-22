@@ -106,52 +106,51 @@ async def sqs_stubber(sqs_client) -> AsyncIterator[Stubber]:
 async def _db_account(db):
     """Populate the account table."""
     await db.execute(
-        sa.insert(Account).values(
-            [
-                {
-                    "id": SYS_ID,
-                    "account_type": "SYS",
-                    "parent_id": None,
-                    "name": "OBP",
-                    "balance": -3000,
-                },
-                {
-                    "id": VLAB_ID,
-                    "account_type": "VLAB",
-                    "parent_id": None,
-                    "name": "Test vlab_01",
-                    "balance": 2000,
-                },
-                {
-                    "id": PROJ_ID,
-                    "account_type": "PROJ",
-                    "parent_id": VLAB_ID,
-                    "name": "Test vlab_01/proj_01",
-                    "balance": 400,
-                },
-                {
-                    "id": RSV_ID,
-                    "account_type": "RSV",
-                    "parent_id": PROJ_ID,
-                    "name": "Test vlab_01/proj_01/RESERVATION",
-                    "balance": 100,
-                },
-                {
-                    "id": PROJ_ID_2,
-                    "account_type": "PROJ",
-                    "parent_id": VLAB_ID,
-                    "name": "Test vlab_01/proj_02",
-                    "balance": 500,
-                },
-                {
-                    "id": RSV_ID_2,
-                    "account_type": "RSV",
-                    "parent_id": PROJ_ID_2,
-                    "name": "Test vlab_01/proj_02/RESERVATION",
-                    "balance": 0,
-                },
-            ],
-        )
+        sa.insert(Account),
+        [
+            {
+                "id": SYS_ID,
+                "account_type": "SYS",
+                "parent_id": None,
+                "name": "OBP",
+                "balance": -3000,
+            },
+            {
+                "id": VLAB_ID,
+                "account_type": "VLAB",
+                "parent_id": None,
+                "name": "Test vlab_01",
+                "balance": 2000,
+            },
+            {
+                "id": PROJ_ID,
+                "account_type": "PROJ",
+                "parent_id": VLAB_ID,
+                "name": "Test vlab_01/proj_01",
+                "balance": 400,
+            },
+            {
+                "id": RSV_ID,
+                "account_type": "RSV",
+                "parent_id": PROJ_ID,
+                "name": "Test vlab_01/proj_01/RESERVATION",
+                "balance": 100,
+            },
+            {
+                "id": PROJ_ID_2,
+                "account_type": "PROJ",
+                "parent_id": VLAB_ID,
+                "name": "Test vlab_01/proj_02",
+                "balance": 500,
+            },
+            {
+                "id": RSV_ID_2,
+                "account_type": "RSV",
+                "parent_id": PROJ_ID_2,
+                "name": "Test vlab_01/proj_02/RESERVATION",
+                "balance": 0,
+            },
+        ],
     )
     # commit b/c the test might be using a new transaction, for example when calling an endpoint
     await db.commit()
@@ -161,37 +160,36 @@ async def _db_account(db):
 async def _db_price(db):
     """Populate the price table."""
     await db.execute(
-        sa.insert(Price).values(
-            [
-                {
-                    "service_type": ServiceType.STORAGE,
-                    "service_subtype": ServiceSubtype.STORAGE,
-                    "valid_from": utcnow(),
-                    "valid_to": None,
-                    "fixed_cost": D0,
-                    "multiplier": Decimal("0.001"),
-                    "vlab_id": None,
-                },
-                {
-                    "service_type": ServiceType.ONESHOT,
-                    "service_subtype": ServiceSubtype.ML_LLM,
-                    "valid_from": utcnow(),
-                    "valid_to": None,
-                    "fixed_cost": D0,
-                    "multiplier": Decimal("0.00001"),
-                    "vlab_id": None,
-                },
-                {
-                    "service_type": ServiceType.LONGRUN,
-                    "service_subtype": ServiceSubtype.SINGLE_CELL_SIM,
-                    "valid_from": utcnow(),
-                    "valid_to": None,
-                    "fixed_cost": Decimal("1.5"),
-                    "multiplier": Decimal("0.01"),
-                    "vlab_id": None,
-                },
-            ],
-        )
+        sa.insert(Price),
+        [
+            {
+                "service_type": ServiceType.STORAGE,
+                "service_subtype": ServiceSubtype.STORAGE,
+                "valid_from": utcnow(),
+                "valid_to": None,
+                "fixed_cost": D0,
+                "multiplier": Decimal("0.001"),
+                "vlab_id": None,
+            },
+            {
+                "service_type": ServiceType.ONESHOT,
+                "service_subtype": ServiceSubtype.ML_LLM,
+                "valid_from": utcnow(),
+                "valid_to": None,
+                "fixed_cost": D0,
+                "multiplier": Decimal("0.00001"),
+                "vlab_id": None,
+            },
+            {
+                "service_type": ServiceType.LONGRUN,
+                "service_subtype": ServiceSubtype.SINGLE_CELL_SIM,
+                "valid_from": utcnow(),
+                "valid_to": None,
+                "fixed_cost": Decimal("1.5"),
+                "multiplier": Decimal("0.01"),
+                "vlab_id": None,
+            },
+        ],
     )
     # commit b/c the test might be using a new transaction, for example when calling an endpoint
     await db.commit()
