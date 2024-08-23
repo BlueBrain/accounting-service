@@ -19,6 +19,7 @@ class ApiErrorCode(UpperStrEnum):
     ENTITY_NOT_FOUND = auto()
     INSUFFICIENT_FUNDS = auto()
     JOB_ALREADY_STARTED = auto()
+    JOB_ALREADY_CANCELLED = auto()
 
 
 @dataclasses.dataclass(kw_only=True)

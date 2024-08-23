@@ -35,7 +35,7 @@ async def _test_release(db, test_func, service_type, service_subtype):
 
     # no jobs
     with pytest.raises(ApiError, match="The specified job cannot be found") as exc_info:
-        await test_func(repos, proj_id=UUIDS.PROJ[0], job_id=UUIDS.JOB[0])
+        await test_func(repos, job_id=UUIDS.JOB[0])
     assert exc_info.value.error_code == ApiErrorCode.ENTITY_NOT_FOUND
 
     proj_balance_initial, rsv_balance_initial = await _get_balances(db)
@@ -63,7 +63,7 @@ async def _test_release(db, test_func, service_type, service_subtype):
     assert proj_balance_before == proj_balance_initial - amount
     assert rsv_balance_before == rsv_balance_initial + amount
 
-    result = await test_func(repos, proj_id=UUIDS.PROJ[0], job_id=UUIDS.JOB[0])
+    result = await test_func(repos, job_id=UUIDS.JOB[0])
     assert result == amount
 
     proj_balance_after, rsv_balance_after = await _get_balances(db)

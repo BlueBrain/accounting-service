@@ -17,9 +17,11 @@ from app.schema.domain import StartedJob
 class JobRepository(BaseRepository):
     """JobRepository."""
 
-    async def get_job(self, job_id: UUID) -> Job | None:
+    async def get_job(self, job_id: UUID, *, for_update: bool = False) -> Job | None:
         """Get an existing job by id, or return None if it doesn't exist."""
         query = sa.select(Job).where(Job.id == job_id)
+        if for_update:
+            query = query.with_for_update()
         return (await self.db.execute(query)).scalar_one_or_none()
 
     async def insert_job(self, job_id: UUID, **kwargs) -> Job:

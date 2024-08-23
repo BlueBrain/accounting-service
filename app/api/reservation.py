@@ -1,5 +1,7 @@
 """Reservation api."""
 
+from uuid import UUID
+
 from fastapi import APIRouter, status
 
 from app.dependencies import RepoGroupDep
@@ -8,7 +10,6 @@ from app.schema.api import (
     MakeLongrunReservationIn,
     MakeOneshotReservationIn,
     MakeReservationOut,
-    ReleaseReservationIn,
     ReleaseReservationOut,
 )
 from app.service import release, reservation
@@ -42,37 +43,33 @@ async def make_longrun_reservation(
     )
 
 
-@router.post("/oneshot/release")
+@router.delete("/oneshot/{job_id}")
 async def release_oneshot_reservation(
     repos: RepoGroupDep,
-    release_request: ReleaseReservationIn,
+    job_id: UUID,
 ) -> ApiResponse[ReleaseReservationOut]:
     """Release the reservation for oneshot job."""
-    reservation_amount = await release.release_oneshot_reservation(
-        repos, proj_id=release_request.proj_id, job_id=release_request.job_id
-    )
+    reservation_amount = await release.release_oneshot_reservation(repos, job_id=job_id)
     return ApiResponse(
         message="Oneshot reservation has been released",
         data=ReleaseReservationOut(
-            job_id=release_request.job_id,
+            job_id=job_id,
             amount=reservation_amount,
         ),
     )
 
 
-@router.post("/longrun/release")
+@router.delete("/longrun/{job_id}")
 async def release_longrun_reservation(
     repos: RepoGroupDep,
-    release_request: ReleaseReservationIn,
+    job_id: UUID,
 ) -> ApiResponse[ReleaseReservationOut]:
     """Release the reservation for longrun job."""
-    reservation_amount = await release.release_longrun_reservation(
-        repos, proj_id=release_request.proj_id, job_id=release_request.job_id
-    )
+    reservation_amount = await release.release_longrun_reservation(repos, job_id=job_id)
     return ApiResponse(
         message="Longrun reservation has been released",
         data=ReleaseReservationOut(
-            job_id=release_request.job_id,
+            job_id=job_id,
             amount=reservation_amount,
         ),
     )

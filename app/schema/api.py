@@ -57,13 +57,6 @@ class MakeReservationOut(BaseModel):
     amount: Decimal
 
 
-class ReleaseReservationIn(BaseModel):
-    """ReleaseReservationIn."""
-
-    proj_id: UUID
-    job_id: UUID
-
-
 class ReleaseReservationOut(BaseModel):
     """ReleaseReservationOut."""
 
