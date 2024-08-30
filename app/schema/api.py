@@ -185,3 +185,66 @@ class SysBalanceOut(BaseModel):
     """SysBalanceOut."""
 
     balance: FormattedDecimal
+
+
+class OneshotReportOut(BaseModel, from_attributes=True):
+    """OneshotReportOut."""
+
+    job_id: UUID
+    type: Literal[ServiceType.ONESHOT]
+    subtype: ServiceSubtype
+    reserved_at: AwareDatetime
+    started_at: AwareDatetime
+    amount: Decimal
+    count: Annotated[int, Field(ge=0)]
+    reserved_amount: Decimal
+    reserved_count: Annotated[int, Field(ge=0)]
+
+
+class LongrunReportOut(BaseModel, from_attributes=True):
+    """LongrunReportOut."""
+
+    job_id: UUID
+    type: Literal[ServiceType.LONGRUN]
+    subtype: ServiceSubtype
+    reserved_at: AwareDatetime
+    started_at: AwareDatetime
+    finished_at: AwareDatetime
+    cancelled_at: AwareDatetime
+    amount: Decimal
+    duration: Annotated[int, Field(ge=0)]
+    reserved_amount: Decimal
+    reserved_duration: Annotated[int, Field(ge=0)]
+
+
+class StorageReportOut(BaseModel, from_attributes=True):
+    """StorageReportOut."""
+
+    job_id: UUID
+    type: Literal[ServiceType.STORAGE]
+    subtype: ServiceSubtype
+    started_at: AwareDatetime
+    finished_at: AwareDatetime
+    amount: Decimal
+    duration: Annotated[int, Field(ge=0)]
+    size: Annotated[int, Field(ge=0)]
+
+
+JobReportUnionOut = Annotated[
+    OneshotReportOut | LongrunReportOut | StorageReportOut,
+    Field(discriminator="type"),
+]
+
+
+class ProjReportOut(BaseModel):
+    """ProjReportOut."""
+
+    proj_id: UUID
+    jobs: list[JobReportUnionOut]
+
+
+class VlabReportOut(BaseModel):
+    """VlabReportOut."""
+
+    vlab_id: UUID
+    projects: list[ProjReportOut]

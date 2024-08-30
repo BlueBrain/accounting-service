@@ -9,6 +9,7 @@ from app.repository.event import EventRepository
 from app.repository.job import JobRepository
 from app.repository.ledger import LedgerRepository
 from app.repository.price import PriceRepository
+from app.repository.report import ReportRepository
 
 
 class RepositoryGroup:
@@ -22,6 +23,7 @@ class RepositoryGroup:
         job_repo_class: type[JobRepository] = JobRepository,
         ledger_repo_class: type[LedgerRepository] = LedgerRepository,
         price_repo_class: type[PriceRepository] = PriceRepository,
+        report_repo_class: type[ReportRepository] = ReportRepository,
     ) -> None:
         """Init the repository group."""
         self._db = db
@@ -30,6 +32,7 @@ class RepositoryGroup:
         self._job_repo_class = job_repo_class
         self._ledger_repo_class = ledger_repo_class
         self._price_repo_class = price_repo_class
+        self._report_repo_class = report_repo_class
 
     @property
     def db(self) -> AsyncSession:
@@ -60,3 +63,8 @@ class RepositoryGroup:
     def price(self) -> PriceRepository:
         """Return the price repository."""
         return self._price_repo_class(self.db)
+
+    @cached_property
+    def report(self) -> ReportRepository:
+        """Return the report repository."""
+        return self._report_repo_class(self.db)
