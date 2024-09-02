@@ -1,23 +1,57 @@
 """Job report repository module."""
 
 from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Row, case, func
+from sqlalchemy import Row, and_, case, func, true
 
 from app.constants import D0, TransactionType
 from app.db.model import Job, Journal, Ledger
 from app.repository.base import BaseRepository
+from app.schema.api import PaginatedParams
 
 
 class ReportRepository(BaseRepository):
     """ReportRepository."""
 
-    async def get_job_reports(self, proj_id: UUID) -> Sequence[Row]:
-        """Get the list of job reports for a given project."""
+    async def get_job_reports(
+        self,
+        vlab_id: UUID | None = None,
+        proj_id: UUID | None = None,
+        pagination: PaginatedParams | None = None,
+        started_after: datetime | None = None,
+        started_before: datetime | None = None,
+    ) -> tuple[Sequence[Row], int]:
+        """Return a page of job reports for a given project, and the total number of jobs."""
+        order_by_columns = (Job.started_at, Job.id)
+        base_query = (
+            sa.select(Job.id)
+            .select_from(Job)
+            .where(
+                Job.finished_at == Job.last_charged_at,
+                (Job.vlab_id == vlab_id) if vlab_id else true(),
+                (Job.proj_id == proj_id) if proj_id else true(),
+                (Job.started_at >= started_after) if started_after else true(),
+                (Job.started_at < started_before) if started_before else true(),
+            )
+        )
+        count_query = base_query.with_only_columns(func.count())
+        count = (await self.db.execute(count_query)).scalar_one()
+        if pagination:
+            selected_job_query = (
+                base_query.order_by(*order_by_columns)
+                .limit(pagination.page_size)
+                .offset(pagination.page_size * (pagination.page - 1))
+                .subquery("selected_job")
+            )
+        else:
+            selected_job_query = base_query.subquery("selected_job")
         query = (
             sa.select(
+                *([Job.vlab_id] if vlab_id is None and proj_id is None else []),
+                *([Job.proj_id] if proj_id is None else []),
                 Job.id.label("job_id"),
                 Job.service_type.label("type"),
                 Job.service_subtype.label("subtype"),
@@ -42,17 +76,14 @@ class ReportRepository(BaseRepository):
                 Job.usage_params["duration"].label("duration"),
                 Job.reservation_params["duration"].label("reserved_duration"),
                 Job.usage_params["size"].label("size"),
-                Job.reservation_params["size"].label("reserved_size"),
             )
-            .select_from(Job)
-            .join(Journal)
-            .join(Ledger)
-            .where(
-                Job.proj_id == proj_id,
-                Job.finished_at == Job.last_charged_at,
-                Ledger.account_id == proj_id,
+            .select_from(selected_job_query)
+            .join(Job, Job.id == selected_job_query.c.id)
+            .outerjoin(Journal, Journal.job_id == Job.id)
+            .outerjoin(
+                Ledger, and_(Ledger.journal_id == Journal.id, Ledger.account_id == Job.proj_id)
             )
             .group_by(Job.id)
-            .order_by(Job.started_at)
+            .order_by(*order_by_columns)
         )
-        return (await self.db.execute(query)).all()
+        return (await self.db.execute(query)).all(), count

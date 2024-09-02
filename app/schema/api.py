@@ -1,10 +1,13 @@
 """Api schema."""
 
+import math
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
 from pydantic import AwareDatetime, Field, model_validator
+from starlette.datastructures import URL
 
 from app.constants import D0, ServiceSubtype, ServiceType
 from app.errors import ApiErrorCode
@@ -24,6 +27,78 @@ class ErrorResponse(BaseModel, use_enum_values=True):
     error_code: ApiErrorCode
     message: str
     details: Any = None
+
+
+class PaginatedParams(BaseModel):
+    """PaginatedParams."""
+
+    page: Annotated[int, Field(strict=True, ge=1)]
+    page_size: Annotated[int, Field(strict=True, ge=1)]
+
+
+class PaginatedMeta(BaseModel):
+    """PaginatedMeta."""
+
+    page: Annotated[int, Field(ge=1)]
+    page_size: Annotated[int, Field(ge=1)]
+    total_pages: Annotated[int, Field(ge=0)]
+    total_items: Annotated[int, Field(ge=0)]
+
+
+class PaginatedLinks(BaseModel):
+    """PaginatedLinks."""
+
+    self: str
+    prev: str | None
+    next: str | None
+    first: str
+    last: str
+
+
+class PaginatedOut[T](BaseModel):
+    """PaginatedOut."""
+
+    items: list[T]
+    meta: PaginatedMeta
+    links: PaginatedLinks
+
+    @classmethod
+    def new(cls, items: Sequence, total_items: int, pagination: PaginatedParams, url: URL) -> Self:
+        """Create a new instance with the given parameters.
+
+        Args:
+            items: sequence of items in the current page.
+            total_items: total number of items available on the server.
+            pagination: pagination instance containing page and page_size.
+            url: current url, used to generate the links to the related pages.
+        """
+        total_pages = math.ceil(total_items / pagination.page_size)
+        return cls.model_validate(
+            {
+                "items": items,
+                "meta": {
+                    "page": pagination.page,
+                    "page_size": pagination.page_size,
+                    "total_pages": total_pages,
+                    "total_items": total_items,
+                },
+                "links": {
+                    "self": str(url),
+                    "prev": (
+                        str(url.include_query_params(page=pagination.page - 1))
+                        if pagination.page > 1
+                        else None
+                    ),
+                    "next": (
+                        str(url.include_query_params(page=pagination.page + 1))
+                        if pagination.page < total_pages
+                        else None
+                    ),
+                    "first": str(url.include_query_params(page=1)),
+                    "last": str(url.include_query_params(page=total_pages or 1)),
+                },
+            }
+        )
 
 
 class BaseMakeReservationIn(BaseModel):
@@ -191,6 +266,8 @@ class OneshotReportOut(BaseModel, from_attributes=True):
     """OneshotReportOut."""
 
     job_id: UUID
+    vlab_id: UUID | None = None
+    proj_id: UUID | None = None
     type: Literal[ServiceType.ONESHOT]
     subtype: ServiceSubtype
     reserved_at: AwareDatetime
@@ -205,12 +282,14 @@ class LongrunReportOut(BaseModel, from_attributes=True):
     """LongrunReportOut."""
 
     job_id: UUID
+    vlab_id: UUID | None = None
+    proj_id: UUID | None = None
     type: Literal[ServiceType.LONGRUN]
     subtype: ServiceSubtype
     reserved_at: AwareDatetime
     started_at: AwareDatetime
     finished_at: AwareDatetime
-    cancelled_at: AwareDatetime
+    cancelled_at: AwareDatetime | None
     amount: Decimal
     duration: Annotated[int, Field(ge=0)]
     reserved_amount: Decimal
@@ -221,6 +300,8 @@ class StorageReportOut(BaseModel, from_attributes=True):
     """StorageReportOut."""
 
     job_id: UUID
+    vlab_id: UUID | None = None
+    proj_id: UUID | None = None
     type: Literal[ServiceType.STORAGE]
     subtype: ServiceSubtype
     started_at: AwareDatetime
@@ -234,17 +315,3 @@ JobReportUnionOut = Annotated[
     OneshotReportOut | LongrunReportOut | StorageReportOut,
     Field(discriminator="type"),
 ]
-
-
-class ProjReportOut(BaseModel):
-    """ProjReportOut."""
-
-    proj_id: UUID
-    jobs: list[JobReportUnionOut]
-
-
-class VlabReportOut(BaseModel):
-    """VlabReportOut."""
-
-    vlab_id: UUID
-    projects: list[ProjReportOut]
