@@ -9,18 +9,19 @@ import pytest
 import sqlalchemy as sa
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession, get_session
+from asyncpg.pgproto.pgproto import timedelta
 from botocore.stub import Stubber
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import application
 from app.config import settings
-from app.constants import D0, ServiceSubtype, ServiceType
-from app.db.model import Account, Price
+from app.constants import D0, ServiceSubtype, ServiceType, TransactionType
+from app.db.model import Account, Job, Journal, Ledger, Price
 from app.db.session import database_session_manager
 from app.utils import utcnow
 
-from tests.constants import PROJ_ID, PROJ_ID_2, RSV_ID, RSV_ID_2, SYS_ID, VLAB_ID
+from tests.constants import PROJ_ID, PROJ_ID_2, RSV_ID, RSV_ID_2, SYS_ID, UUIDS, VLAB_ID
 from tests.utils import truncate_tables
 
 
@@ -152,7 +153,6 @@ async def _db_account(db):
             },
         ],
     )
-    # commit b/c the test might be using a new transaction, for example when calling an endpoint
     await db.commit()
 
 
@@ -163,15 +163,7 @@ async def _db_price(db):
         sa.insert(Price),
         [
             {
-                "service_type": ServiceType.STORAGE,
-                "service_subtype": ServiceSubtype.STORAGE,
-                "valid_from": utcnow(),
-                "valid_to": None,
-                "fixed_cost": D0,
-                "multiplier": Decimal("0.001"),
-                "vlab_id": None,
-            },
-            {
+                "id": 1,
                 "service_type": ServiceType.ONESHOT,
                 "service_subtype": ServiceSubtype.ML_LLM,
                 "valid_from": utcnow(),
@@ -181,6 +173,7 @@ async def _db_price(db):
                 "vlab_id": None,
             },
             {
+                "id": 2,
                 "service_type": ServiceType.LONGRUN,
                 "service_subtype": ServiceSubtype.SINGLE_CELL_SIM,
                 "valid_from": utcnow(),
@@ -189,9 +182,142 @@ async def _db_price(db):
                 "multiplier": Decimal("0.01"),
                 "vlab_id": None,
             },
+            {
+                "id": 3,
+                "service_type": ServiceType.STORAGE,
+                "service_subtype": ServiceSubtype.STORAGE,
+                "valid_from": utcnow(),
+                "valid_to": None,
+                "fixed_cost": D0,
+                "multiplier": Decimal("0.001"),
+                "vlab_id": None,
+            },
         ],
     )
-    # commit b/c the test might be using a new transaction, for example when calling an endpoint
+    await db.commit()
+
+
+@pytest.fixture
+async def _db_job(db, _db_account):
+    """Populate the job table."""
+    dt = utcnow() - timedelta(minutes=10)
+    await db.execute(
+        sa.insert(Job),
+        [
+            {
+                "id": UUIDS.JOB[0],
+                "vlab_id": UUIDS.VLAB[0],
+                "proj_id": UUIDS.PROJ[0],
+                "service_type": ServiceType.ONESHOT,
+                "service_subtype": ServiceSubtype.ML_LLM,
+                "reserved_at": dt,
+                "started_at": dt + timedelta(seconds=10),
+                "last_alive_at": None,
+                "last_charged_at": dt + timedelta(seconds=10),
+                "finished_at": dt + timedelta(seconds=10),
+                "cancelled_at": None,
+                "reservation_params": {"count": 1000},
+                "usage_params": {"count": 1500},
+            },
+            {
+                "id": UUIDS.JOB[1],
+                "vlab_id": UUIDS.VLAB[0],
+                "proj_id": UUIDS.PROJ[0],
+                "service_type": ServiceType.LONGRUN,
+                "service_subtype": ServiceSubtype.SINGLE_CELL_SIM,
+                "reserved_at": dt,
+                "started_at": dt + timedelta(seconds=30),
+                "last_alive_at": dt + timedelta(seconds=60),
+                "last_charged_at": dt + timedelta(seconds=120),
+                "finished_at": dt + timedelta(seconds=120),
+                "cancelled_at": None,
+                "reservation_params": {"instances": 1, "duration": 60},
+                "usage_params": {"instances": 1},
+            },
+            {
+                "id": UUIDS.JOB[2],
+                "vlab_id": UUIDS.VLAB[0],
+                "proj_id": UUIDS.PROJ[0],
+                "service_type": ServiceType.STORAGE,
+                "service_subtype": ServiceSubtype.STORAGE,
+                "reserved_at": None,
+                "started_at": dt + timedelta(seconds=120),
+                "last_alive_at": dt + timedelta(seconds=120),
+                "last_charged_at": dt + timedelta(seconds=240),
+                "finished_at": dt + timedelta(seconds=240),
+                "cancelled_at": None,
+                "usage_params": {"size": 1000},
+            },
+        ],
+    )
+    await db.commit()
+
+
+@pytest.fixture
+async def _db_ledger(db, _db_account, _db_price, _db_job):
+    """Populate the journal and ledger table."""
+    dt = utcnow() - timedelta(minutes=1)
+    await db.execute(
+        sa.insert(Journal),
+        [
+            {
+                "id": 1,
+                "transaction_datetime": dt,
+                "transaction_type": TransactionType.RESERVE,
+                "job_id": UUIDS.JOB[0],
+                "price_id": 1,  # oneshot.ml-llm
+            },
+            {
+                "id": 2,
+                "transaction_datetime": dt,
+                "transaction_type": TransactionType.CHARGE_ONESHOT,
+                "job_id": UUIDS.JOB[0],
+                "price_id": 1,  # oneshot.ml-llm
+            },
+            {
+                "id": 3,
+                "transaction_datetime": dt,
+                "transaction_type": TransactionType.CHARGE_ONESHOT,
+                "job_id": UUIDS.JOB[0],
+                "price_id": 1,  # oneshot.ml-llm
+            },
+        ],
+    )
+    await db.execute(
+        sa.insert(Ledger),
+        [
+            {
+                "account_id": UUIDS.PROJ[0],
+                "journal_id": 1,
+                "amount": -1000 * Decimal("0.00001"),
+            },
+            {
+                "account_id": UUIDS.RSV[0],
+                "journal_id": 1,
+                "amount": 1000 * Decimal("0.00001"),
+            },
+            {
+                "account_id": UUIDS.RSV[0],
+                "journal_id": 2,
+                "amount": -1000 * Decimal("0.00001"),
+            },
+            {
+                "account_id": UUIDS.SYS,
+                "journal_id": 2,
+                "amount": 1000 * Decimal("0.00001"),
+            },
+            {
+                "account_id": UUIDS.PROJ[0],
+                "journal_id": 3,
+                "amount": -500 * Decimal("0.00001"),
+            },
+            {
+                "account_id": UUIDS.SYS,
+                "journal_id": 3,
+                "amount": 500 * Decimal("0.00001"),
+            },
+        ],
+    )
     await db.commit()
 
 

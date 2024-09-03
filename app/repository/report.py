@@ -5,7 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Row, and_, case, func, true
+from sqlalchemy import Integer, Row, and_, case, func, true
 
 from app.constants import D0, TransactionType
 from app.db.model import Job, Journal, Ledger
@@ -18,9 +18,9 @@ class ReportRepository(BaseRepository):
 
     async def get_job_reports(
         self,
+        pagination: PaginatedParams,
         vlab_id: UUID | None = None,
         proj_id: UUID | None = None,
-        pagination: PaginatedParams | None = None,
         started_after: datetime | None = None,
         started_before: datetime | None = None,
     ) -> tuple[Sequence[Row], int]:
@@ -39,15 +39,12 @@ class ReportRepository(BaseRepository):
         )
         count_query = base_query.with_only_columns(func.count())
         count = (await self.db.execute(count_query)).scalar_one()
-        if pagination:
-            selected_job_query = (
-                base_query.order_by(*order_by_columns)
-                .limit(pagination.page_size)
-                .offset(pagination.page_size * (pagination.page - 1))
-                .subquery("selected_job")
-            )
-        else:
-            selected_job_query = base_query.subquery("selected_job")
+        selected_job_query = (
+            base_query.order_by(*order_by_columns)
+            .limit(pagination.page_size)
+            .offset(pagination.page_size * (pagination.page - 1))
+            .subquery("selected_job")
+        )
         query = (
             sa.select(
                 *([Job.vlab_id] if vlab_id is None and proj_id is None else []),
@@ -59,7 +56,7 @@ class ReportRepository(BaseRepository):
                 Job.started_at,
                 Job.finished_at,
                 Job.cancelled_at,
-                (-func.sum(Ledger.amount)).label("amount"),
+                (func.coalesce(-func.sum(Ledger.amount), D0)).label("amount"),
                 (
                     -func.sum(
                         case(
@@ -73,7 +70,10 @@ class ReportRepository(BaseRepository):
                 ).label("reserved_amount"),
                 Job.usage_params["count"].label("count"),
                 Job.reservation_params["count"].label("reserved_count"),
-                Job.usage_params["duration"].label("duration"),
+                case(
+                    (Job.finished_at == Job.started_at, None),
+                    else_=func.extract("epoch", (Job.finished_at - Job.started_at)).cast(Integer),
+                ).label("duration"),
                 Job.reservation_params["duration"].label("reserved_duration"),
                 Job.usage_params["size"].label("size"),
             )

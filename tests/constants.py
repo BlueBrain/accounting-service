@@ -28,6 +28,8 @@ UUIDS = UUIDS(
     ],
     JOB=[
         UUID("923cc386-ae77-44f1-88cd-0cc85cea60b9"),
+        UUID("3dade995-fe19-4386-a71a-e24dacf0f0e1"),
+        UUID("d2304a0d-f19e-404b-b327-211de0d515b7"),
     ],
 )
 
