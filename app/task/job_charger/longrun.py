@@ -26,4 +26,5 @@ class PeriodicLongrunCharger(BaseTask):
                 repos=repos,
                 min_charging_interval=settings.CHARGE_LONGRUN_MIN_CHARGING_INTERVAL,
                 min_charging_amount=settings.CHARGE_LONGRUN_MIN_CHARGING_AMOUNT,
+                expiration_interval=settings.CHARGE_LONGRUN_EXPIRATION_INTERVAL,
             )

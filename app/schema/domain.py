@@ -85,6 +85,8 @@ class ChargeLongrunResult:
     finished_uncharged: int = 0
     finished_charged: int = 0
     finished_overcharged: int = 0
+    expired_uncharged: int = 0
+    expired_charged: int = 0
     failure: int = 0
 
 

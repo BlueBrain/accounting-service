@@ -24,6 +24,7 @@ async def _charge_generic(
     reason: str,
     min_charging_interval: float = 0.0,
     min_charging_amount: Decimal = D0,
+    expired: bool = False,
 ) -> None:
     now = utcnow()
     total_seconds = int((charge_end - charge_start).total_seconds())
@@ -115,6 +116,14 @@ async def _charge_generic(
         vlab_id=accounts.vlab.id,
         proj_id=accounts.proj.id,
         last_charged_at=charge_end,
+        **(
+            {
+                "finished_at": charge_end,
+                "cancelled_at": charge_end,
+            }
+            if expired
+            else {}
+        ),
     )
 
 
@@ -122,6 +131,7 @@ async def charge_longrun(
     repos: RepositoryGroup,
     min_charging_interval: float = 0.0,
     min_charging_amount: Decimal = D0,
+    expiration_interval: float = 3600,
 ) -> ChargeLongrunResult:
     """Charge for longrun jobs.
 
@@ -131,6 +141,7 @@ async def charge_longrun(
             It doesn't affect finished jobs.
         min_charging_amount: minimum amount of money to be charged for running jobs.
             It doesn't affect finished jobs.
+        expiration_interval: time since last_alive_at, after which the job is considered expired.
     """
 
     def _on_error() -> None:
@@ -143,6 +154,36 @@ async def charge_longrun(
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error):
             match job:
+                case StartedJob(last_alive_at, last_charged_at=None, finished_at=None) if (
+                    (now - last_alive_at).total_seconds() > expiration_interval
+                ):
+                    # Cancel the expired job and charge the user for the first and last time
+                    await _charge_generic(
+                        repos,
+                        job,
+                        charge_start=job.started_at,
+                        charge_end=now,
+                        include_fixed_cost=True,
+                        release_reservation=True,
+                        reason="expired_uncharged",
+                        expired=True,
+                    )
+                    result.expired_uncharged += 1
+                case StartedJob(last_alive_at, last_charged_at=datetime(), finished_at=None) if (
+                    (now - last_alive_at).total_seconds() > expiration_interval
+                ):
+                    # Cancel the expired job and charge the user for the last time
+                    await _charge_generic(
+                        repos,
+                        job,
+                        charge_start=job.last_charged_at,
+                        charge_end=now,
+                        include_fixed_cost=False,
+                        release_reservation=True,
+                        reason="expired_charged",
+                        expired=True,
+                    )
+                    result.expired_charged += 1
                 case StartedJob(last_charged_at=None, finished_at=None):
                     # Charge fixed cost and first running time, set last_charged_at=now
                     await _charge_generic(
