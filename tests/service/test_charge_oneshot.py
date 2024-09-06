@@ -1,66 +1,28 @@
-import pytest
-import sqlalchemy as sa
+from decimal import Decimal
 
-from app.constants import ServiceSubtype, ServiceType
-from app.db.model import Job, Journal, Ledger
+import pytest
+
+from app.constants import TransactionType
 from app.repository.group import RepositoryGroup
 from app.schema.domain import ChargeOneshotResult
 from app.service import charge_oneshot as test_module
 from app.utils import create_uuid, utcnow
 
-from tests.constants import PROJ_ID, VLAB_ID
-
-
-async def _insert_job(db, job_id, count, started_at):
-    await db.execute(
-        sa.insert(Job),
-        [
-            {
-                "id": job_id,
-                "vlab_id": VLAB_ID,
-                "proj_id": PROJ_ID,
-                "service_type": ServiceType.ONESHOT,
-                "service_subtype": ServiceSubtype.ML_LLM,
-                "started_at": started_at,
-                "last_alive_at": started_at,
-                "last_charged_at": None,
-                "finished_at": None,
-                "cancelled_at": None,
-                "usage_params": {"count": int(count)},
-            }
-        ],
-    )
-
-
-async def _update_job(db, job_id, **kwargs):
-    return (
-        await db.execute(sa.update(Job).values(**kwargs).where(Job.id == job_id).returning(Job))
-    ).scalar_one()
-
-
-async def _select_job(db, job_id):
-    return (await db.execute(sa.select(Job).where(Job.id == job_id))).scalar_one_or_none()
-
-
-async def _select_ledger_rows(db, job_id):
-    return (
-        await db.execute(
-            sa.select(Journal, Ledger).join_from(Journal, Ledger).where(Journal.job_id == job_id)
-        )
-    ).all()
+from tests.constants import UUIDS
+from tests.utils import _insert_oneshot_job, _select_job, _select_ledger_rows, _update_job
 
 
 @pytest.mark.usefixtures("_db_account", "_db_price")
 async def test_charge_oneshot(db):
     repos = RepositoryGroup(db)
+    now = utcnow()
 
     # no jobs
     result = await test_module.charge_oneshot(repos)
     assert result == ChargeOneshotResult()
     # new job
     job_id = create_uuid()
-    now = utcnow()
-    await _insert_job(db, job_id, count=10, started_at=now)
+    await _insert_oneshot_job(db, job_id, reserved_count=100, reserved_at=now)
 
     result = await test_module.charge_oneshot(repos)
     assert result == ChargeOneshotResult(success=0)
@@ -69,8 +31,16 @@ async def test_charge_oneshot(db):
     assert job.last_charged_at is None
 
     # finished job
-    now = utcnow()
-    job = await _update_job(db, job_id, finished_at=now)
+    count = 150
+    job = await _update_job(
+        db,
+        job_id,
+        started_at=now,
+        last_alive_at=now,
+        finished_at=now,
+        usage_params={"count": int(count)},
+    )
+    assert job.started_at == now
     assert job.finished_at == now
 
     result = await test_module.charge_oneshot(repos)
@@ -79,5 +49,24 @@ async def test_charge_oneshot(db):
     assert job.last_charged_at is not None
     rows = await _select_ledger_rows(db, job_id)
     assert len(rows) == 2
-
-    # TODO: verify the content of the ledger rows
+    expected_amount = 150 * Decimal("0.00001")
+    assert [dict(row._mapping) for row in rows] == [
+        {
+            "account_id": UUIDS.PROJ[0],
+            "amount": -expected_amount,
+            "job_id": job_id,
+            "price_id": 1,
+            "properties": {"reason": "finished_uncharged:charge_project"},
+            "transaction_datetime": now,
+            "transaction_type": TransactionType.CHARGE_ONESHOT,
+        },
+        {
+            "account_id": UUIDS.SYS,
+            "amount": expected_amount,
+            "job_id": job_id,
+            "price_id": 1,
+            "properties": {"reason": "finished_uncharged:charge_project"},
+            "transaction_datetime": now,
+            "transaction_type": TransactionType.CHARGE_ONESHOT,
+        },
+    ]

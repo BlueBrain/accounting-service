@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import patch
 from uuid import UUID
@@ -159,6 +160,7 @@ async def _db_account(db):
 @pytest.fixture
 async def _db_price(db):
     """Populate the price table."""
+    valid_from = datetime.fromisoformat("2024-01-01T00:00:00Z")
     await db.execute(
         sa.insert(Price),
         [
@@ -166,7 +168,7 @@ async def _db_price(db):
                 "id": 1,
                 "service_type": ServiceType.ONESHOT,
                 "service_subtype": ServiceSubtype.ML_LLM,
-                "valid_from": utcnow(),
+                "valid_from": valid_from,
                 "valid_to": None,
                 "fixed_cost": D0,
                 "multiplier": Decimal("0.00001"),
@@ -176,7 +178,7 @@ async def _db_price(db):
                 "id": 2,
                 "service_type": ServiceType.LONGRUN,
                 "service_subtype": ServiceSubtype.SINGLE_CELL_SIM,
-                "valid_from": utcnow(),
+                "valid_from": valid_from,
                 "valid_to": None,
                 "fixed_cost": Decimal("1.5"),
                 "multiplier": Decimal("0.01"),
@@ -186,7 +188,7 @@ async def _db_price(db):
                 "id": 3,
                 "service_type": ServiceType.STORAGE,
                 "service_subtype": ServiceSubtype.STORAGE,
-                "valid_from": utcnow(),
+                "valid_from": valid_from,
                 "valid_to": None,
                 "fixed_cost": D0,
                 "multiplier": Decimal("0.001"),

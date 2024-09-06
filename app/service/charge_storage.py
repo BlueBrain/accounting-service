@@ -1,6 +1,7 @@
 """Charge for storage."""
 
 from collections.abc import Sequence
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -29,11 +30,12 @@ def _get_amount(total_seconds: float, total_bytes: float) -> Decimal:
 async def _charge_one(
     repos: RepositoryGroup,
     job: StartedJob,
+    transaction_datetime: datetime,
     min_charging_interval: float,
     min_charging_amount: Decimal,
     properties: dict[str, Any] | None = None,
 ) -> None:
-    charging_at = job.finished_at or utcnow()
+    charging_at = job.finished_at or transaction_datetime
     charging_start = job.last_charged_at or job.started_at
     total_seconds = int((charging_at - charging_start).total_seconds())
     if not job.finished_at and total_seconds < min_charging_interval:
@@ -54,7 +56,7 @@ async def _charge_one(
         size=job.usage_params["size"],
         duration=total_seconds,
     )
-    total_amount = calculate_cost(price=price, usage_value=usage_value)
+    total_amount = calculate_cost(price=price, usage_value=usage_value, include_fixed_cost=False)
     if not job.finished_at and abs(total_amount) < min_charging_amount:
         L.debug(
             "Not charging job {}: calculated amount too low: {:.6f}",
@@ -66,7 +68,7 @@ async def _charge_one(
         amount=total_amount,
         debited_from=accounts.proj.id,
         credited_to=accounts.sys.id,
-        transaction_datetime=charging_at,
+        transaction_datetime=transaction_datetime,
         transaction_type=TransactionType.CHARGE_STORAGE,
         job_id=job.id,
         price_id=price.id,
@@ -85,6 +87,7 @@ async def charge_storage(
     jobs: Sequence[StartedJob],
     min_charging_interval: float = 0.0,
     min_charging_amount: Decimal = D0,
+    transaction_datetime: datetime | None = None,
 ) -> ChargeStorageResult:
     """Charge for the storage and update the corresponding job.
 
@@ -93,6 +96,8 @@ async def charge_storage(
         jobs: sequence of jobs to be processed, or None to select all the job not finished yet.
         min_charging_interval: minimum interval between charges for running jobs.
         min_charging_amount: minimum amount of money to be charged for running jobs.
+        transaction_datetime: datetime of the transaction, or None to use the current timestamp.
+            If the job is still running, it's used also to calculate the duration to be charged.
     """
 
     def _on_error() -> None:
@@ -102,12 +107,14 @@ async def charge_storage(
     def _on_success() -> None:
         result.success += 1
 
+    now = transaction_datetime or utcnow()
     result = ChargeStorageResult()
     for job in jobs:
         async with try_nested(repos.db, on_error=_on_error, on_success=_on_success):
             await _charge_one(
                 repos=repos,
                 job=job,
+                transaction_datetime=now,
                 min_charging_interval=min_charging_interval,
                 min_charging_amount=min_charging_amount,
             )
