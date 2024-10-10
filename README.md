@@ -11,7 +11,7 @@ This service is composed by:
 Requirements:
 
 - [Docker compose](https://docs.docker.com/compose/) >= 2.24.4
-- [PDM](https://pdm-project.org/)
+- [uv](https://docs.astral.sh/uv/)
 
 Valid `make` targets:
 

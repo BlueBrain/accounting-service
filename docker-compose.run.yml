@@ -35,7 +35,7 @@ services:
         path: ./app
         target: /code/app
       - action: rebuild
-        path: pdm.lock
+        path: uv.lock
     depends_on:
       db:
         condition: service_healthy

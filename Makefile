@@ -11,25 +11,25 @@ help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
 install:  ## Install dependencies into .venv
-	pdm install --no-self
+	uv sync --no-install-project
 
 compile-deps:  ## Create or update the lock file, without upgrading the version of the dependencies
-	pdm lock --update-reuse
+	uv lock
 
 upgrade-deps:  ## Create or update the lock file, using the latest version of the dependencies
-	pdm lock
+	uv lock --upgrade
 
 check-deps:  ## Check that the dependencies in the existing lock file are valid
-	pdm lock --check
+	uv lock --locked
 
 format:  # Run formatters
-	pdm run python -m ruff format
-	pdm run python -m ruff check --fix
+	uv run -m ruff format
+	uv run -m ruff check --fix
 
 lint:  ## Run linters
-	pdm run python -m ruff format --check
-	pdm run python -m ruff check
-	pdm run python -m mypy app
+	uv run -m ruff format --check
+	uv run -m ruff check
+	uv run -m mypy app
 
 build:  ## Build the Docker image
 	docker compose build app
@@ -58,15 +58,15 @@ test-local: export AWS_DEFAULT_REGION=us-east-1
 test-local: export AWS_ENDPOINT_URL=http://127.0.0.1:9324
 test-local:  ## Run tests locally
 	docker compose up --wait db-test
-	pdm run python -m alembic upgrade head
-	pdm run python -m pytest
+	uv run -m alembic upgrade head
+	uv run -m pytest
 
 migration: export DB_HOST=127.0.0.1
 migration: export DB_PORT=5433
 migration:  ## Create the alembic migration
 	docker compose up --wait db
-	pdm run python -m alembic upgrade head
-	pdm run python -m alembic revision --autogenerate
+	uv run -m alembic upgrade head
+	uv run -m alembic revision --autogenerate
 
 show-config: export COMPOSE_PROFILES=run,test
 show-config:  ## Show the docker-compose configuration in the current environment
