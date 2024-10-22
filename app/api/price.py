@@ -16,7 +16,7 @@ async def add_price(
 ) -> ApiResponse[AddPriceOut]:
     """Add a new price."""
     result = await price.add_price(repos, price_request)
-    return ApiResponse(
+    return ApiResponse[AddPriceOut](
         message="Price added",
         data=AddPriceOut.model_validate(result, from_attributes=True),
     )

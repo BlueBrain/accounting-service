@@ -26,7 +26,7 @@ async def get_jobs_for_system(
     result = PaginatedOut[JobReportUnionOut].new(
         items=jobs, total_items=total_items, pagination=pagination, url=request.url
     )
-    return ApiResponse(
+    return ApiResponse[PaginatedOut[JobReportUnionOut]](
         message="Job report for system",
         data=result,
     )
@@ -48,7 +48,7 @@ async def get_jobs_for_vlab(
     result = PaginatedOut[JobReportUnionOut].new(
         items=jobs, total_items=total_items, pagination=pagination, url=request.url
     )
-    return ApiResponse(
+    return ApiResponse[PaginatedOut[JobReportUnionOut]](
         message=f"Job report for virtual-lab {vlab_id}",
         data=result,
     )
@@ -70,7 +70,7 @@ async def get_jobs_for_proj(
     result = PaginatedOut[JobReportUnionOut].new(
         items=jobs, total_items=total_items, pagination=pagination, url=request.url
     )
-    return ApiResponse(
+    return ApiResponse[PaginatedOut[JobReportUnionOut]](
         message=f"Job report for project {proj_id}",
         data=result,
     )

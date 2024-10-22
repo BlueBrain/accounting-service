@@ -24,7 +24,7 @@ async def make_oneshot_reservation(
 ) -> ApiResponse[MakeReservationOut]:
     """Make a new reservation for oneshot job."""
     result = await reservation.make_oneshot_reservation(repos, reservation_request)
-    return ApiResponse(
+    return ApiResponse[MakeReservationOut](
         message="Oneshot reservation executed",
         data=result,
     )
@@ -37,7 +37,7 @@ async def make_longrun_reservation(
 ) -> ApiResponse[MakeReservationOut]:
     """Make a new reservation for longrun job."""
     result = await reservation.make_longrun_reservation(repos, reservation_request)
-    return ApiResponse(
+    return ApiResponse[MakeReservationOut](
         message="Longrun reservation executed",
         data=result,
     )
@@ -50,7 +50,7 @@ async def release_oneshot_reservation(
 ) -> ApiResponse[ReleaseReservationOut]:
     """Release the reservation for oneshot job."""
     reservation_amount = await release.release_oneshot_reservation(repos, job_id=job_id)
-    return ApiResponse(
+    return ApiResponse[ReleaseReservationOut](
         message="Oneshot reservation has been released",
         data=ReleaseReservationOut(
             job_id=job_id,
@@ -66,7 +66,7 @@ async def release_longrun_reservation(
 ) -> ApiResponse[ReleaseReservationOut]:
     """Release the reservation for longrun job."""
     reservation_amount = await release.release_longrun_reservation(repos, job_id=job_id)
-    return ApiResponse(
+    return ApiResponse[ReleaseReservationOut](
         message="Longrun reservation has been released",
         data=ReleaseReservationOut(
             job_id=job_id,

@@ -15,7 +15,7 @@ router = APIRouter()
 async def get_balance_for_system(repos: RepoGroupDep) -> ApiResponse[SysBalanceOut]:
     """Return the balance for thr system."""
     result = await balance_service.get_balance_for_system(repos)
-    return ApiResponse(
+    return ApiResponse[SysBalanceOut](
         message="Balance for system",
         data=result,
     )
@@ -29,7 +29,7 @@ async def get_balance_for_virtual_lab(
     result = await balance_service.get_balance_for_vlab(
         repos, vlab_id=vlab_id, include_projects=include_projects
     )
-    return ApiResponse(
+    return ApiResponse[VlabBalanceOut](
         message=f"Balance for virtual-lab{' including projects' if include_projects else ''}",
         data=result,
     )
@@ -41,7 +41,7 @@ async def get_balance_for_project(
 ) -> ApiResponse[ProjBalanceOut]:
     """Return the balance for a given project."""
     result = await balance_service.get_balance_for_project(repos, proj_id=proj_id)
-    return ApiResponse(
+    return ApiResponse[ProjBalanceOut](
         message="Balance for project",
         data=result,
     )

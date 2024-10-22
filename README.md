@@ -44,14 +44,14 @@ make run
 
 To make a release, build and publish the Docker image to the registry, you need to:
 
--   push a tag to the main branch using git, or
--   create a release through the GitHub UI.
+-   create a release through the GitHub UI (recommended), or
+-   push a tag to the main branch using git.
 
-The format of the tag should be `YYYY.MM.DD`, where:
+The format of the tag should be `YYYY.M.N`, where:
 
 -   `YYYY` is the full year (2024, 2025 ...)
--   `MM` is the short month, not zero-padded (1, 2 ... 11, 12)
--   `DD` is any incremental number, not zero-padded (it doesn't need to be the day number)
+-   `M` is the short month, not zero-padded (1, 2 ... 11, 12)
+-   `N` is any incremental number, not zero-padded (it doesn't need to be the day number)
 
 
 ## Documentation

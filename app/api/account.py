@@ -23,7 +23,7 @@ async def add_system_account(
 ) -> ApiResponse[SysAccountCreationOut]:
     """Add the system account."""
     result = await account_service.add_system(repos, account_id=account.id, name=account.name)
-    return ApiResponse(
+    return ApiResponse[SysAccountCreationOut](
         message="System account created",
         data=SysAccountCreationOut.model_validate(result, from_attributes=True),
     )
@@ -35,7 +35,7 @@ async def add_virtual_lab_account(
 ) -> ApiResponse[VlabAccountCreationOut]:
     """Add a new virtual lab account."""
     result = await account_service.add_virtual_lab(repos, account_id=account.id, name=account.name)
-    return ApiResponse(
+    return ApiResponse[VlabAccountCreationOut](
         message="Virtual lab created",
         data=VlabAccountCreationOut.model_validate(result, from_attributes=True),
     )
@@ -49,7 +49,7 @@ async def add_project_account(
     result = await account_service.add_project(
         repos, account_id=account.id, name=account.name, vlab_id=account.vlab_id
     )
-    return ApiResponse(
+    return ApiResponse[ProjAccountCreationOut](
         message="Project created",
         data=ProjAccountCreationOut.model_validate(result, from_attributes=True),
     )
